@@ -1,0 +1,3 @@
+package com.steelhouse.smartpixelconfigservice.service
+
+class RbClientSpxConfigServiceTest

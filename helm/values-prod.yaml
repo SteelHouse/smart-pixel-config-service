@@ -1,0 +1,60 @@
+replicaCount: 2
+
+nameSpace: prod-pixel
+
+image:
+  repository: steelhousedev/smart-pixel-config-service
+  tag: prod-latest
+  pullPolicy: Always
+
+service:
+  name: smart-pixel-config-service
+  env: prod
+  externalPort: 80
+  internalPort: 8080
+  probe:
+    path: /health
+    port: 8080
+    initialDelaySeconds: 30
+    timeoutSeconds: 2
+    periodSeconds: 15
+    failureThreshold: 3
+  region: us-west-2
+
+prometheus:
+  enabled: true
+  path: /prometheus
+
+ingress:
+  enabled: false
+  labels:
+    traffic-type: internal
+
+resources:
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+  requests:
+    cpu: 2000m
+    memory: 2Gi
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: "prod"
+  - name: SECURITY_BASIC_ENABLED
+    value: "false"
+  - name: MANAGEMENT_SECURITY_ENABLED
+    value: "false"
+
+imagePullSecrets: codefresh-generated-docker.io-dockerhub-prod-pixel
+
+istio:
+  enabled: true
+  domain: coredev.west2.steelhouse.com
+  selector: private
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    averageUtilization: 70

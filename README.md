@@ -1,1 +1,1 @@
-# pixel-config-service
+# smart-pixel-config-service

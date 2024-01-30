@@ -1,0 +1,10 @@
+spring:
+  cache:
+    caffeine:
+      spec: expireAfterWrite=5m
+
+logging:
+  level:
+    ROOT: WARN
+    org.springframework: ERROR
+    com.steelhouse: DEBUG

@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://core-prod-aurora.cluster-ro-czcssluxaubs.us-west-2.rds.amazonaws.com:5432/steelhouse
+    username: steelhouse
+    password: 'ENC(OyDUDWO7lecV1CsGaB0rJdT1OGsimYBO)'
+  cache:
+    caffeine:
+      spec: expireAfterWrite=5m
+
+logging:
+  level:
+    ROOT: WARN
+    org.springframework: ERROR
+    com.steelhouse: INFO
