@@ -11,11 +11,17 @@ fun findRegexMatchResultInString(regex: Regex, str: String): String? {
     return matchResult.groupValues[1]
 }
 
+fun getSpxListInfoString(list: List<AdvertiserSmartPxVariables>): String {
+    var str = ""
+    list.forEach { spx -> str += (getSpxInfoString(spx)) }
+    return str
+}
+
 fun getSpxInfoString(spx: AdvertiserSmartPxVariables): String {
     return "\n{variableId=[${spx.variableId}]; advertiserId=[${spx.advertiserId}]; query=[${spx.query.trimIndent()}]}"
 }
 
-fun createRbClientAdvIdSpxQuery(rbAdvId: String): String {
+fun createRbClientAdvIdSpxFieldQuery(rbAdvId: String): String {
     return """
         let getRockerBoxAdvID = () => { let rb_adv_id = null; return "rb_adv_id=$rbAdvId"; }; getRockerBoxAdvID();
     """.trimIndent()
@@ -33,14 +39,14 @@ fun createRbClientAdvIdSpxQuery(rbAdvId: String): String {
  * };
  * getRockerBoxUID();
  */
-fun createRbClientUidSpxQuery(): String {
-    return rbClientUidQueryPart1 + rbClientUidQueryPart2
+fun createRbClientUidSpxFieldQuery(): String {
+    return rbClientUidSpxFieldQueryPart1 + rbClientUidSpxFieldQueryPart2
 }
 
-val rbClientUidQueryPart1 = """
+val rbClientUidSpxFieldQueryPart1 = """
     let getRockerBoxUID = () => { let rb_uid = null; try{ rb_uid = `rb_uid=$
 """.trimIndent()
 
-val rbClientUidQueryPart2 = """
+val rbClientUidSpxFieldQueryPart2 = """
     {document.cookie.split("rbuid=")[1].split(";")[0].trim()}`; }catch(e){ rb_uid = null }; return rb_uid }; getRockerBoxUID();	
 """.trimIndent()

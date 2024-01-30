@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.RestController
 class RbClientSpxConfigController(
     private val rbClientSpxConfigService: RbClientSpxConfigService
 ) {
-
     private val log: Logger = LogManager.getLogger(this.javaClass)
 
     @RequestMapping(
@@ -60,7 +59,8 @@ class RbClientSpxConfigController(
         val rbAdvId = rbClientConfig.rbAdvId
         log.debug("got request to upsert rb client. advertiser=[$advertiserId]; rbAdvId=[$rbAdvId]")
 
-        if (advertiserId != advertiserIdInPath || isAlphanumericWithUnderscore(rbAdvId)) {
+        if (advertiserId != advertiserIdInPath || !isAlphanumericWithUnderscore(rbAdvId)) {
+            log.debug("advertiserId match? [${advertiserId == advertiserIdInPath}]; rbAdvId is valid? [${isAlphanumericWithUnderscore(rbAdvId)}]")
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
 
@@ -68,7 +68,7 @@ class RbClientSpxConfigController(
             ?: return ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
 
         return if (rbClientSpxMap.isEmpty()) {
-            val creationSucceed = rbClientSpxConfigService.createRbClient(rbClientConfig)
+            val creationSucceed = rbClientSpxConfigService.createRbClient(rbClientConfig.advertiserId, rbClientConfig.rbAdvId)
             if (creationSucceed) ResponseEntity(HttpStatus.CREATED) else ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
         } else {
             val updateSucceed = rbClientSpxConfigService.updateRbClient(rbClientConfig, rbClientSpxMap)

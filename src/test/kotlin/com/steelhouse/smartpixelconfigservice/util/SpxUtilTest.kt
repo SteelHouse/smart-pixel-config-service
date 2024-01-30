@@ -11,15 +11,15 @@ class SpxUtilTest {
 
     @Test
     fun testIsAlphanumericWithUnderscore() {
-        val validStrings = listOf("abcXYZ", "abc123", "123", "abc_123")
-        for (str in validStrings) assertTrue(isAlphanumericWithUnderscore(str), "string $str is not valid")
+        val validStrings = listOf("abcXYZ", "abc123", "123", "abc_123", "abc_123_abc")
+        for (str in validStrings) assertTrue(isAlphanumericWithUnderscore(str), "string $str should be valid")
 
         val notValidStrings = listOf("abc\"XYZ", "abc@123", "abc.123", "abc 123", "abc/123", "abc\\123", "abc?123", "abc[123", "abc]123")
-        for (str in notValidStrings) assertFalse(isAlphanumericWithUnderscore(str), "string $str should be valid")
+        for (str in notValidStrings) assertFalse(isAlphanumericWithUnderscore(str), "string $str should not be valid")
     }
 
     @Test
-    fun testRetrieveRbAdvIdFromSpxQuery() {
+    fun testFindRegexMatchResultInString() {
         val regex = Regex("rb_adv_id=(\\w+)")
         Assertions.assertAll(
             { assertNull(findRegexMatchResultInString(regex, "test_id")) },
@@ -39,7 +39,7 @@ class SpxUtilTest {
     }
 
     @Test
-    fun testCreateRbClientUidSpxQuery() {
-        // print(createRbClientUidSpxQuery())
+    fun testCreateRbClientUidSpxFieldQuery() {
+        // print(createRbClientUidSpxFieldQuery())
     }
 }
