@@ -1,7 +1,7 @@
 package com.steelhouse.smartpixelconfigservice.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.steelhouse.smartpixelconfigservice.model.RbClientConfig
+import com.steelhouse.smartpixelconfigservice.config.RbClientConfig
 import com.steelhouse.smartpixelconfigservice.service.RbClientSpxConfigService
 import com.steelhouse.smartpixelconfigservice.util.isAlphanumericWithUnderscore
 import org.apache.logging.log4j.LogManager
@@ -68,10 +68,12 @@ class RbClientSpxConfigController(
             ?: return ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
 
         return if (rbClientSpxMap.isEmpty()) {
-            val creationSucceed = rbClientSpxConfigService.createRbClient(rbClientConfig.advertiserId, rbClientConfig.rbAdvId)
-            if (creationSucceed) ResponseEntity(HttpStatus.CREATED) else ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
+            val insertSucceed = rbClientSpxConfigService.insertRbClient(rbClientConfig.advertiserId, rbClientConfig.rbAdvId)
+            log.info(logClientRequestResult(advertiserId, "insert", rbAdvId, insertSucceed))
+            if (insertSucceed) ResponseEntity(HttpStatus.CREATED) else ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
         } else {
             val updateSucceed = rbClientSpxConfigService.updateRbClient(rbClientConfig, rbClientSpxMap)
+            log.info(logClientRequestResult(advertiserId, "update", rbAdvId, updateSucceed))
             if (updateSucceed) ResponseEntity(HttpStatus.OK) else ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
         }
     }
@@ -91,6 +93,11 @@ class RbClientSpxConfigController(
         if (rbClientSpxMap.isEmpty()) return ResponseEntity(HttpStatus.NO_CONTENT)
 
         val deletionSucceed = rbClientSpxConfigService.deleteRbClient(advertiserId, rbClientSpxMap)
+        log.info(logClientRequestResult(advertiserId, "delete", "n/a", deletionSucceed))
         return if (deletionSucceed) ResponseEntity(HttpStatus.OK) else ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
+    }
+
+    private fun logClientRequestResult(advertiserId: Int, action: String, rbAdvId: String, succeed: Boolean): String {
+        return "completed client request. advertiserId=[$advertiserId]; action=[$action]; rbAdvId=[$rbAdvId]; succeed=[$succeed]"
     }
 }

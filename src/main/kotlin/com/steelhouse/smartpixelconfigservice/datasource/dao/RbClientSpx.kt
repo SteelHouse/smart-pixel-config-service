@@ -4,6 +4,7 @@ import com.steelhouse.postgresql.publicschema.AdvertiserSmartPxVariables
 import com.steelhouse.smartpixelconfigservice.datasource.repository.SpxRepository
 import com.steelhouse.smartpixelconfigservice.util.createRbClientAdvIdSpxFieldQuery
 import com.steelhouse.smartpixelconfigservice.util.createRbClientUidSpxFieldQuery
+import io.prometheus.client.Counter
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.Cacheable
@@ -15,9 +16,10 @@ const val rbClientAdvIdSpxTag = "rbClientAdvIdSpx"
 
 @Component
 class RbClientSpx(
+    sqlCounter: Counter,
     jdbcTemplate: JdbcTemplate,
     spxRepository: SpxRepository
-) : Spx(jdbcTemplate, spxRepository) {
+) : Spx(sqlCounter, jdbcTemplate, spxRepository) {
 
     private val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
@@ -46,18 +48,6 @@ class RbClientSpx(
         return getSpxListByFieldQueryKeyword(rbClientAdvIdSpxFieldQueryKeyword)
     }
 
-    fun deleteSPXsByVariableIds(advertiserId: Int, variableIds: List<Int>): Boolean {
-        val ids = variableIds.joinToString()
-        return try {
-            deleteSPXsByIds(variableIds)
-            log.debug("spx deletion succeed. advertiserId=[$advertiserId]; variableIds=[$ids]")
-            true
-        } catch (e: Exception) {
-            log.error("unknown db exception to delete spx. advertiserId=[$advertiserId]; variableIds=[$ids]. error=[${e.message}]")
-            false
-        }
-    }
-
     fun isRbClientSpx(query: String): Boolean {
         return isRbClientUidSpx(query) || isRbClientAdvIdSpx(query)
     }
@@ -83,8 +73,8 @@ class RbClientSpx(
      *         null for unknown db error, need further action to recover
      *         false for unknown db exception
      */
-    fun createRbClientSPXs(list: List<AdvertiserSmartPxVariables>): Boolean? {
-        return batchCreateSPXsBySqlQuery(list, sqlToInsertSpxAdvertiserIdAndQuery)
+    fun insertRbClientSPXs(list: List<AdvertiserSmartPxVariables>): Boolean? {
+        return batchInsertSPXsBySqlQuery(list, sqlToInsertSpxAdvertiserIdAndQuery)
     }
 
     fun createRbClientAdvIdSpx(aid: Int, rbAdvId: String): AdvertiserSmartPxVariables {

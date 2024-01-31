@@ -1,10 +1,10 @@
 package com.steelhouse.smartpixelconfigservice.service
 
 import com.steelhouse.postgresql.publicschema.AdvertiserSmartPxVariables
+import com.steelhouse.smartpixelconfigservice.config.RbClientConfig
 import com.steelhouse.smartpixelconfigservice.datasource.dao.RbClientSpx
 import com.steelhouse.smartpixelconfigservice.datasource.dao.rbClientAdvIdSpxTag
 import com.steelhouse.smartpixelconfigservice.datasource.dao.rbClientUidSpxTag
-import com.steelhouse.smartpixelconfigservice.model.RbClientConfig
 import com.steelhouse.smartpixelconfigservice.util.findRegexMatchResultInString
 import com.steelhouse.smartpixelconfigservice.util.getSpxInfoString
 import com.steelhouse.smartpixelconfigservice.util.getSpxListInfoString
@@ -88,12 +88,12 @@ class RbClientSpxConfigService(
      * Create SPXs for a new Rockerbox client, and returns a boolean flag indicating the status of action.
      * If there are errors during the spx creation process, remove the problematic spx if possible and return false.
      */
-    fun createRbClient(advertiserId: Int, rbAdvId: String): Boolean {
+    fun insertRbClient(advertiserId: Int, rbAdvId: String): Boolean {
         log.debug("need to create a new rb client")
         val rbClientAdvIdSpx = rbClientSpx.createRbClientAdvIdSpx(advertiserId, rbAdvId)
         val rbClientUidSpx = rbClientSpx.createRbClientUid(advertiserId)
-        val creationSucceed = rbClientSpx.createRbClientSPXs(listOf(rbClientAdvIdSpx, rbClientUidSpx))
-        if (creationSucceed == true || creationSucceed == false) return creationSucceed
+        val insertSucceed = rbClientSpx.insertRbClientSPXs(listOf(rbClientAdvIdSpx, rbClientUidSpx))
+        if (insertSucceed == true || insertSucceed == false) return insertSucceed
         removeProblematicRbClientSPXs(advertiserId)
         return false
     }
@@ -144,18 +144,20 @@ class RbClientSpxConfigService(
             val query = spx.query
             val pixelInfoString = getSpxInfoString(spx)
             if (spx.advertiserId != advertiserId) {
-                log.error("wrong spx retrieved for advertiserId=[$advertiserId]. mission abandoned. spx=$pixelInfoString")
+                // In theory, this error should never happen
+                log.error("wrong rb client found in db: wrong spx retrieved for advertiserId=[$advertiserId]. spx=$pixelInfoString")
                 return false
             }
             if (rbClientSpx.isRbClientSpx(query)) {
                 log.debug("added rb client spx to deletion list for advertiserID=[$advertiserId]... spx=$pixelInfoString")
                 variableIds.add(spx.variableId)
             } else {
-                log.error("non rb client spx found to be deleted for advertiserID=[$advertiserId]. mission abandoned. spx=$pixelInfoString")
+                // In theory, this error should never happen
+                log.error("wrong rb client found in db: non rb client spx retrieved. advertiserID=[$advertiserId]. spx=$pixelInfoString")
                 return false
             }
         }
-        return rbClientSpx.deleteSPXsByVariableIds(advertiserId, variableIds)
+        return rbClientSpx.deleteSPXsByVariableIds(variableIds)
     }
 
     private fun retrieveRbAdvIdFromSpxFieldQuery(spx: AdvertiserSmartPxVariables?): String? {
@@ -163,7 +165,7 @@ class RbClientSpxConfigService(
         val regex = Regex("rb_adv_id=(\\w+)")
         val result = findRegexMatchResultInString(regex, spx.query)
         if (result == null) {
-            log.error("no rb_adv_id in rb client getRockerBoxAdvID spx. variableId=[${spx.variableId}]; advertiserId=[${spx.advertiserId}]")
+            log.error("wrong rb client found in db: no rb_adv_id in getRockerBoxAdvID spx. variableId=[${spx.variableId}]; advertiserId=[${spx.advertiserId}]")
             return null
         }
         return result
