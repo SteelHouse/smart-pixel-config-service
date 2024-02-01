@@ -24,23 +24,12 @@ class RbClientSpxConfigController(
     private val log: Logger = LogManager.getLogger(this.javaClass)
 
     @RequestMapping(
-        value = ["/spx/rb/advertisers"],
-        method = [RequestMethod.GET],
-        produces = [MediaType.APPLICATION_JSON_VALUE]
-    )
-    fun getAllRockerboxAdvertisers(): ResponseEntity<List<Int>> {
-        log.debug("got request to get all the rb clients' advertiser IDs")
-
-        val allRbClientAdvertiserIds = rbClientSpxConfigService.getRbClientsAdvertiserIds() ?: return ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
-        return ResponseEntity.ok().body(allRbClientAdvertiserIds)
-    }
-
-    @RequestMapping(
         value = ["/spx/rb/clients"],
         method = [RequestMethod.GET],
         produces = [MediaType.APPLICATION_JSON_VALUE]
     )
     fun getAllRockerboxClients(): ResponseEntity<String> {
+        // This is a test endpoint for development purpose. The client does not need this endpoint.
         log.debug("got request to get all the rb clients' advertiserId and rockerboxAdvertiserId")
 
         val allRbClients = rbClientSpxConfigService.getRbClients() ?: return ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -59,8 +48,8 @@ class RbClientSpxConfigController(
         val rbAdvId = rbClientConfig.rbAdvId
         log.debug("got request to upsert rb client. advertiser=[$advertiserId]; rbAdvId=[$rbAdvId]")
 
-        if (advertiserId != advertiserIdInPath || !isAlphanumericWithUnderscore(rbAdvId)) {
-            log.debug("advertiserId match? [${advertiserId == advertiserIdInPath}]; rbAdvId is valid? [${isAlphanumericWithUnderscore(rbAdvId)}]")
+        if (advertiserId != advertiserIdInPath || !rbAdvId.isAlphanumericWithUnderscore()) {
+            log.debug("advertiserId match? [${advertiserId == advertiserIdInPath}]; rbAdvId is valid? [${rbAdvId.isAlphanumericWithUnderscore()}]")
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
 

@@ -9,35 +9,38 @@ const val rbClientUidSpxFieldQueryKeyword = "getRockerBoxUID()"
 // Rockerbox client's getRockerBoxAdvID(advId) spx looks like:
 // let getRockerBoxAdvID = () => { let rb_adv_id = null; return "rb_adv_id=test_id"; }; getRockerBoxAdvID();
 const val rbClientAdvIdSpxFieldQueryKeyword = "getRockerBoxAdvID()"
-fun isRbClientSpx(query: String): Boolean {
-    return isRbClientAdvIdSpx(query) || isRbClientUidSpx(query)
+
+val rbClientAdvIdExtractorRegex = Regex("rb_adv_id=(\\w+)")
+
+fun String.isRbClientSpx(): Boolean {
+    return this.isRbClientAdvIdSpx() || this.isRbClientUidSpx()
 }
 
-fun isRbClientAdvIdSpx(query: String): Boolean {
-    return query.contains(rbClientAdvIdSpxFieldQueryKeyword)
+fun String.isRbClientAdvIdSpx(): Boolean {
+    return this.contains(rbClientAdvIdSpxFieldQueryKeyword)
 }
 
-fun isRbClientUidSpx(query: String): Boolean {
-    return query.contains(rbClientUidSpxFieldQueryKeyword)
+fun String.isRbClientUidSpx(): Boolean {
+    return this.contains(rbClientUidSpxFieldQueryKeyword)
 }
 
 fun createRbClientAdvIdSpx(aid: Int, rbAdvId: String): AdvertiserSmartPxVariables {
     val spx = AdvertiserSmartPxVariables()
     spx.advertiserId = aid
-    spx.query = createRbClientAdvIdSpxFieldQuery(rbAdvId)
+    spx.query = rbAdvId.createRbClientAdvIdSpxFieldQuery()
     return spx
 }
 
-fun createRbClientAdvIdSpxFieldQuery(rbAdvId: String): String {
+fun String.createRbClientAdvIdSpxFieldQuery(): String {
     return """
-        let getRockerBoxAdvID = () => { let rb_adv_id = null; return "rb_adv_id=$rbAdvId"; }; getRockerBoxAdvID();
+        let getRockerBoxAdvID = () => { let rb_adv_id = null; return "rb_adv_id=$this"; }; getRockerBoxAdvID();
     """.trimIndent()
 }
 
-fun createRbClientUidSpx(aid: Int): AdvertiserSmartPxVariables {
+fun Int.createRbClientUidSpx(): AdvertiserSmartPxVariables {
     val spx = AdvertiserSmartPxVariables()
-    spx.advertiserId = aid
-    spx.query = createRbClientUidSpxFieldQuery()
+    spx.advertiserId = this
+    spx.query = getRbClientUidSpxFieldQuery()
     return spx
 }
 
@@ -53,7 +56,7 @@ fun createRbClientUidSpx(aid: Int): AdvertiserSmartPxVariables {
  * };
  * getRockerBoxUID();
  */
-fun createRbClientUidSpxFieldQuery(): String {
+fun getRbClientUidSpxFieldQuery(): String {
     return rbClientUidSpxFieldQueryPart1 + rbClientUidSpxFieldQueryPart2
 }
 

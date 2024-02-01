@@ -12,10 +12,10 @@ class SpxUtilTest {
     @Test
     fun testIsAlphanumericWithUnderscore() {
         val validStrings = listOf("abcXYZ", "abc123", "123", "abc_123", "abc_123_abc")
-        for (str in validStrings) assertTrue(isAlphanumericWithUnderscore(str), "string $str should be valid")
+        for (str in validStrings) assertTrue(str.isAlphanumericWithUnderscore(), "string $str should be valid")
 
         val notValidStrings = listOf("abc\"XYZ", "abc@123", "abc.123", "abc 123", "abc/123", "abc\\123", "abc?123", "abc[123", "abc]123")
-        for (str in notValidStrings) assertFalse(isAlphanumericWithUnderscore(str), "string $str should not be valid")
+        for (str in notValidStrings) assertFalse(str.isAlphanumericWithUnderscore(), "string $str should not be valid")
     }
 
     @Test

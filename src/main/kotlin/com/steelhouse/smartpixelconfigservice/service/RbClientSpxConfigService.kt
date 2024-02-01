@@ -13,6 +13,7 @@ import com.steelhouse.smartpixelconfigservice.util.getSpxListInfoString
 import com.steelhouse.smartpixelconfigservice.util.isRbClientAdvIdSpx
 import com.steelhouse.smartpixelconfigservice.util.isRbClientSpx
 import com.steelhouse.smartpixelconfigservice.util.isRbClientUidSpx
+import com.steelhouse.smartpixelconfigservice.util.rbClientAdvIdExtractorRegex
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -25,8 +26,9 @@ class RbClientSpxConfigService(
 
     /**
      * Returns a list of all the Rockerbox client's mntn advertiserId or null if there are errors.
+     * The list is retrieved from the getRockerBoxUID smart pixels.
      */
-    fun getRbClientsAdvertiserIds(): List<Int>? {
+    fun getRbClientsAdvertiserIdListFromUidSpx(): MutableList<Int>? {
         val rbClientsUidSpxList = rbClientSpx.getRbClientsUidSpxList() ?: return null
         val list = mutableListOf<Int>()
         rbClientsUidSpxList.forEach { spx -> list.add(spx.advertiserId) }
@@ -37,11 +39,27 @@ class RbClientSpxConfigService(
      * Returns a map of all the Rockerbox client's mntn advertiserId -> rbAdvertiserId or null if there are errors.
      */
     fun getRbClients(): Map<Int, String>? {
-        val rbClientsAdvIdSpxList = rbClientSpx.getRbClientsAdvIdSpxList() ?: return null
+        val advIdSpxList = rbClientSpx.getRbClientsAdvIdSpxList() ?: return null
+        val aidListFromUidSpx = getRbClientsAdvertiserIdListFromUidSpx() ?: return null
+        return getValidRbClientInfoMap(advIdSpxList, aidListFromUidSpx)
+    }
+
+    fun getValidRbClientInfoMap(advIdSpxList: List<AdvertiserSmartPxVariables>, aidListFromUidSpx: MutableList<Int>): Map<Int, String> {
         val map = mutableMapOf<Int, String>()
-        rbClientsAdvIdSpxList.forEach { spx ->
-            val rbAdvId = retrieveRbAdvIdFromSpxFieldQuery(spx)
-            if (rbAdvId != null) map[spx.advertiserId] = rbAdvId
+        advIdSpxList.forEach { spx ->
+            val aid = spx.advertiserId
+            if (aidListFromUidSpx.contains(aid)) {
+                val rbAdvId = retrieveRbAdvIdFromSpxFieldQuery(spx)
+                if (rbAdvId != null) map[spx.advertiserId] = rbAdvId
+                aidListFromUidSpx.remove(aid)
+            } else {
+                log.error("wrong rb client found in db: advertiser has getRockerBoxAdvID spx but no getRockerBoxUID spx. advertiserId=[$aid]")
+            }
+        }
+        if (aidListFromUidSpx.isNotEmpty()) {
+            aidListFromUidSpx.forEach {
+                log.error("wrong rb client found in db: advertiser has getRockerBoxUID spx but no getRockerBoxAdvID spx. advertiserId=[$it]")
+            }
         }
         return map
     }
@@ -73,8 +91,8 @@ class RbClientSpxConfigService(
         val map = mutableMapOf<String, AdvertiserSmartPxVariables>()
         pixels.forEach { spx ->
             val query = spx.query
-            if (isRbClientUidSpx(query)) map[rbClientUidSpxTag] = spx
-            if (isRbClientAdvIdSpx(query)) map[rbClientAdvIdSpxTag] = spx
+            if (query.isRbClientUidSpx()) map[rbClientUidSpxTag] = spx
+            if (query.isRbClientAdvIdSpx()) map[rbClientAdvIdSpxTag] = spx
         }
         return map
     }
@@ -98,7 +116,7 @@ class RbClientSpxConfigService(
     fun insertRbClient(advertiserId: Int, rbAdvId: String): Boolean {
         log.debug("need to create a new rb client")
         val rbClientAdvIdSpx = createRbClientAdvIdSpx(advertiserId, rbAdvId)
-        val rbClientUidSpx = createRbClientUidSpx(advertiserId)
+        val rbClientUidSpx = advertiserId.createRbClientUidSpx()
         val insertSucceed = rbClientSpx.insertRbClientSPXs(listOf(rbClientAdvIdSpx, rbClientUidSpx))
         if (insertSucceed == true || insertSucceed == false) return insertSucceed
         removeProblematicRbClientSPXs(advertiserId)
@@ -151,15 +169,15 @@ class RbClientSpxConfigService(
             val query = spx.query
             val pixelInfoString = getSpxInfoString(spx)
             if (spx.advertiserId != advertiserId) {
-                // In theory, this error should never happen
+                // In theory, this error should never happen because the map is retrieved by this service and guaranteed to be valid.
                 log.error("wrong rb client found in db: wrong spx retrieved for advertiserId=[$advertiserId]. spx=$pixelInfoString")
                 return false
             }
-            if (isRbClientSpx(query)) {
+            if (query.isRbClientSpx()) {
                 log.debug("added rb client spx to deletion list for advertiserID=[$advertiserId]... spx=$pixelInfoString")
                 variableIds.add(spx.variableId)
             } else {
-                // In theory, this error should never happen
+                // In theory, this error should never happen because the map is retrieved by this service and guaranteed to be valid.
                 log.error("wrong rb client found in db: non rb client spx retrieved. advertiserID=[$advertiserId]. spx=$pixelInfoString")
                 return false
             }
@@ -169,8 +187,7 @@ class RbClientSpxConfigService(
 
     private fun retrieveRbAdvIdFromSpxFieldQuery(spx: AdvertiserSmartPxVariables?): String? {
         if (spx == null || spx.query == null) return null
-        val regex = Regex("rb_adv_id=(\\w+)")
-        val result = findRegexMatchResultInString(regex, spx.query)
+        val result = findRegexMatchResultInString(rbClientAdvIdExtractorRegex, spx.query)
         if (result == null) {
             log.error("wrong rb client found in db: no rb_adv_id in getRockerBoxAdvID spx. variableId=[${spx.variableId}]; advertiserId=[${spx.advertiserId}]")
             return null

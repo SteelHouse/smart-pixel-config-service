@@ -2,9 +2,9 @@ package com.steelhouse.smartpixelconfigservice.util
 
 import com.steelhouse.postgresql.publicschema.AdvertiserSmartPxVariables
 
-fun isAlphanumericWithUnderscore(input: String): Boolean {
+fun String.isAlphanumericWithUnderscore(): Boolean {
     val regex = Regex("\\w+")
-    return input.matches(regex)
+    return this.matches(regex)
 }
 fun findRegexMatchResultInString(regex: Regex, str: String): String? {
     val matchResult = regex.find(str) ?: return null

@@ -62,8 +62,6 @@ dependencies {
     implementation("com.steelhouse:domain-postgresql:$steelhouseDomainPostgresVersion") {
         exclude(group = "javax.validation", module = "validation-api")
     }
-//    implementation("io.springfox:springfox-swagger2:$swaggerVersion")
-//    implementation("io.springfox:springfox-swagger-ui:$swaggerVersion")
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
     testImplementation("io.mockk:mockk:1.9.3")

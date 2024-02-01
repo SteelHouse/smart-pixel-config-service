@@ -42,14 +42,20 @@ class RbClientSpxConfigServiceTest {
     }
 
     @Test
-    fun `getClientsAdvertiserIds does not validate spx and returns list`() {
+    fun `getClientsAdvertiserIdListFromUidSpx does not validate spx`() {
+        // Test null value
+        // Stub behavior for the mocked properties
+        every { rbClientSpx.getRbClientsUidSpxList() } answers { null }
+        // Invoke the function and test
+        assertNull(service.getRbClientsAdvertiserIdListFromUidSpx())
+
         // Test dummy values
         // Prepare data
         assignDummyValuesToSPXs()
         // Stub behavior for the mocked properties
         every { rbClientSpx.getRbClientsUidSpxList() } answers { listOfSpx }
         // Invoke the function and test
-        assertEquals(listOf(aid, aid), service.getRbClientsAdvertiserIds())
+        assertEquals(listOf(aid, aid), service.getRbClientsAdvertiserIdListFromUidSpx())
 
         // Test Rockerbox client values values
         // Prepare data
@@ -57,16 +63,27 @@ class RbClientSpxConfigServiceTest {
         // Stub behavior for the mocked properties
         every { rbClientSpx.getRbClientsUidSpxList() } answers { listOfSpx }
         // Invoke the function and test
-        assertEquals(listOf(aid, aid), service.getRbClientsAdvertiserIds())
+        assertEquals(listOf(aid, aid), service.getRbClientsAdvertiserIdListFromUidSpx())
     }
 
     @Test
-    fun `getClients validates spx and returns map`() {
+    fun `getClients validates spx`() {
+        // Test null value
+        every { rbClientSpx.getRbClientsAdvIdSpxList() } answers { null }
+        every { rbClientSpx.getRbClientsUidSpxList() } answers { listOf(uidSpx) }
+        assertNull(service.getRbClients())
+
+        // Test null value
+        every { rbClientSpx.getRbClientsAdvIdSpxList() } answers { listOf(advIdSpx) }
+        every { rbClientSpx.getRbClientsUidSpxList() } answers { null }
+        assertNull(service.getRbClients())
+
         // Test dummy values
         // Prepare data
         assignDummyValuesToSPXs()
         // Stub behavior for the mocked properties
-        every { rbClientSpx.getRbClientsAdvIdSpxList() } answers { listOfSpx }
+        every { rbClientSpx.getRbClientsAdvIdSpxList() } answers { listOf(advIdSpx) }
+        every { rbClientSpx.getRbClientsUidSpxList() } answers { listOf(uidSpx) }
         // Invoke the function and test
         assertEquals(emptyMap<String, AdvertiserSmartPxVariables>(), service.getRbClients())
 
@@ -74,9 +91,58 @@ class RbClientSpxConfigServiceTest {
         // Prepare data
         assignValidQueryToSPXs()
         // Stub behavior for the mocked properties
-        every { rbClientSpx.getRbClientsAdvIdSpxList() } answers { listOfSpx }
+        every { rbClientSpx.getRbClientsAdvIdSpxList() } answers { listOf(advIdSpx) }
+        every { rbClientSpx.getRbClientsUidSpxList() } answers { listOf(uidSpx) }
         // Invoke the function and test
         assertEquals(mapOf(aid to rbAdvId), service.getRbClients())
+    }
+
+    @Test
+    fun `getClients filters out wrong rb client`() {
+        assignDummyValuesToSPXs()
+        assignValidQueryToSPXs()
+        val dummySpx = AdvertiserSmartPxVariables()
+        dummySpx.advertiserId = 1
+
+        // Test rb Client which has getRockerBoxAdvID spx but no getRockerBoxUID spx
+        // Prepare data
+        dummySpx.query = validAdvIdSpxQuery
+        // Stub behavior for the mocked properties
+        every { rbClientSpx.getRbClientsAdvIdSpxList() } answers { listOf(advIdSpx, dummySpx) }
+        every { rbClientSpx.getRbClientsUidSpxList() } answers { listOf(uidSpx) }
+        // Invoke the function and test
+        assertEquals(mapOf(aid to rbAdvId), service.getRbClients())
+
+        // Test rb Client which has getRockerBoxUID spx but no getRockerBoxAdvID spx
+        // Prepare data
+        dummySpx.query = validUidSpxQuery
+        // Stub behavior for the mocked properties
+        every { rbClientSpx.getRbClientsAdvIdSpxList() } answers { listOf(advIdSpx) }
+        every { rbClientSpx.getRbClientsUidSpxList() } answers { listOf(uidSpx, dummySpx) }
+        // Invoke the function and test
+        assertEquals(mapOf(aid to rbAdvId), service.getRbClients())
+    }
+
+    @Test
+    fun `getValidRbClientInfoMap keeps valid rb client and returns map`() {
+        assignDummyValuesToSPXs()
+        assignValidQueryToSPXs()
+        val dummySpx = AdvertiserSmartPxVariables()
+        dummySpx.advertiserId = 1
+
+        // Test rb Client which has getRockerBoxAdvID spx but no getRockerBoxUID spx
+        // Prepare data
+        dummySpx.query = validAdvIdSpxQuery
+        val list = mutableListOf<Int>()
+        list.add(advIdSpx.advertiserId)
+        // Invoke the function and test
+        // Error message should be like "wrong rb client found in db: advertiser has getRockerBoxAdvID spx but no getRockerBoxUID spx. advertiserId=[1]"
+        assertEquals(mapOf(aid to rbAdvId), service.getValidRbClientInfoMap(listOf(advIdSpx, dummySpx), list))
+
+        // Prepare data and test again
+        list.add(dummySpx.advertiserId)
+        // Error message should be like "wrong rb client found in db: advertiser has getRockerBoxAdvID spx but no getRockerBoxUID spx. advertiserId=[123]"
+        assertEquals(mapOf(dummySpx.advertiserId to rbAdvId), service.getValidRbClientInfoMap(listOf(advIdSpx, dummySpx), list))
     }
 
     @Test

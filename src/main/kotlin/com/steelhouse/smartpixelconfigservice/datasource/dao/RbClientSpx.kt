@@ -8,7 +8,6 @@ import com.steelhouse.smartpixelconfigservice.util.rbClientUidSpxFieldQueryKeywo
 import io.prometheus.client.Counter
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.cache.annotation.Cacheable
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Component
 
@@ -31,18 +30,16 @@ class RbClientSpx(
             VALUES(?, 34, ?, 3, true, null, null, null, null, 'spx');
     """.trimIndent()
 
-    @Cacheable("rbClientsUidSpxListCache")
     fun getRbClientsUidSpxList(): List<AdvertiserSmartPxVariables>? {
         return getSpxListByFieldQueryKeyword(rbClientUidSpxFieldQueryKeyword)
     }
 
-    @Cacheable("rbClientsAdvIdSpxListCache")
     fun getRbClientsAdvIdSpxList(): List<AdvertiserSmartPxVariables>? {
         return getSpxListByFieldQueryKeyword(rbClientAdvIdSpxFieldQueryKeyword)
     }
 
     fun updateRbClientAdvIdSpx(variableId: Int, rbAdvId: String): Boolean {
-        val newQuery = createRbClientAdvIdSpxFieldQuery(rbAdvId)
+        val newQuery = rbAdvId.createRbClientAdvIdSpxFieldQuery()
         log.debug("need to update an existing rb client's getRockerBoxAdvID spx. variableId=[$variableId]; new query=[$newQuery]")
         return updateSpxFieldQuery(variableId, newQuery)
     }

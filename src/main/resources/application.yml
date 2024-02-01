@@ -8,7 +8,7 @@ spring:
     # url: jdbc:postgresql://core-prod-aurora.cluster-ro-czcssluxaubs.us-west-2.rds.amazonaws.com:5432/steelhouse
     # password: 'ENC(OyDUDWO7lecV1CsGaB0rJdT1OGsimYBO)'
   cache:
-    cache-names: ['rbClientsUidSpxListCache', 'rbClientsAdvIdSpxListCache']
+    cache-names: ['spxListByAidCache', 'spxListByFieldQueryCache']
     caffeine:
       spec: expireAfterWrite=1m
 

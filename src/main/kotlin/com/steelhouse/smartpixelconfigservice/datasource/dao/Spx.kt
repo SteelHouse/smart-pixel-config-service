@@ -6,6 +6,7 @@ import com.steelhouse.smartpixelconfigservice.util.getSpxListInfoString
 import io.prometheus.client.Counter
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.jdbc.core.BatchPreparedStatementSetter
 import org.springframework.jdbc.core.BeanPropertyRowMapper
@@ -20,6 +21,8 @@ class Spx(
 ) {
 
     private val log: Logger = LoggerFactory.getLogger(this.javaClass)
+
+    @Cacheable("spxListByAidCache")
     fun getSpxListByAdvertiserId(advertiserId: Int): List<AdvertiserSmartPxVariables>? {
         val query = """
             SELECT * 
@@ -29,6 +32,7 @@ class Spx(
         return queryDbForSpxList(query)
     }
 
+    @Cacheable("spxListByFieldQueryCache")
     fun getSpxListByFieldQueryKeyword(keyword: String): List<AdvertiserSmartPxVariables>? {
         val sql = createIlikeSqlQuery(keyword)
         return queryDbForSpxList(sql)
