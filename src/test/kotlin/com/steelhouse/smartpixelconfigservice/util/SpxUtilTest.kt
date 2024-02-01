@@ -54,17 +54,4 @@ class SpxUtilTest {
         spx.query = "dummy"
         assertEquals("\n{variableId=[123]; advertiserId=[456]; query=[dummy]}", getSpxInfoString(spx))
     }
-
-    @Test
-    fun testCreateRbClientAdvIdSpxFieldQuery() {
-        assertEquals(
-            """let getRockerBoxAdvID = () => { let rb_adv_id = null; return "rb_adv_id=dummy_id"; }; getRockerBoxAdvID();""",
-            createRbClientAdvIdSpxFieldQuery("dummy_id")
-        )
-    }
-
-    @Test
-    fun testCreateRbClientUidSpxFieldQuery() {
-        // print(createRbClientUidSpxFieldQuery())
-    }
 }

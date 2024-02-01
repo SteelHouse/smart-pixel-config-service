@@ -3,7 +3,8 @@ package com.steelhouse.smartpixelconfigservice.datasource.dao
 import com.steelhouse.postgresql.publicschema.AdvertiserSmartPxVariables
 import com.steelhouse.smartpixelconfigservice.datasource.repository.SpxRepository
 import com.steelhouse.smartpixelconfigservice.util.createRbClientAdvIdSpxFieldQuery
-import com.steelhouse.smartpixelconfigservice.util.createRbClientUidSpxFieldQuery
+import com.steelhouse.smartpixelconfigservice.util.rbClientAdvIdSpxFieldQueryKeyword
+import com.steelhouse.smartpixelconfigservice.util.rbClientUidSpxFieldQueryKeyword
 import io.prometheus.client.Counter
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -30,14 +31,6 @@ class RbClientSpx(
             VALUES(?, 34, ?, 3, true, null, null, null, null, 'spx');
     """.trimIndent()
 
-    // Rockerbox client's getRockerBoxUID(uid) spx looks like:
-    // let getRockerBoxUID = () => { let rb_uid = null; try{ rb_uid = `rb_uid=${document.cookie.split("rbuid=")[1].split(";")[0].trim()}`; }catch(e){ rb_uid = null }; return rb_uid }; getRockerBoxUID();
-    val rbClientUidSpxFieldQueryKeyword = "getRockerBoxUID()"
-
-    // Rockerbox client's getRockerBoxAdvID(advId) spx looks like:
-    // let getRockerBoxAdvID = () => { let rb_adv_id = null; return "rb_adv_id=test_id"; }; getRockerBoxAdvID();
-    val rbClientAdvIdSpxFieldQueryKeyword = "getRockerBoxAdvID()"
-
     @Cacheable("rbClientsUidSpxListCache")
     fun getRbClientsUidSpxList(): List<AdvertiserSmartPxVariables>? {
         return getSpxListByFieldQueryKeyword(rbClientUidSpxFieldQueryKeyword)
@@ -46,18 +39,6 @@ class RbClientSpx(
     @Cacheable("rbClientsAdvIdSpxListCache")
     fun getRbClientsAdvIdSpxList(): List<AdvertiserSmartPxVariables>? {
         return getSpxListByFieldQueryKeyword(rbClientAdvIdSpxFieldQueryKeyword)
-    }
-
-    fun isRbClientSpx(query: String): Boolean {
-        return isRbClientUidSpx(query) || isRbClientAdvIdSpx(query)
-    }
-
-    fun isRbClientUidSpx(query: String): Boolean {
-        return query.contains(rbClientUidSpxFieldQueryKeyword)
-    }
-
-    fun isRbClientAdvIdSpx(query: String): Boolean {
-        return query.contains(rbClientAdvIdSpxFieldQueryKeyword)
     }
 
     fun updateRbClientAdvIdSpx(variableId: Int, rbAdvId: String): Boolean {
@@ -75,19 +56,5 @@ class RbClientSpx(
      */
     fun insertRbClientSPXs(list: List<AdvertiserSmartPxVariables>): Boolean? {
         return batchInsertSPXsBySqlQuery(list, sqlToInsertSpxAdvertiserIdAndQuery)
-    }
-
-    fun createRbClientAdvIdSpx(aid: Int, rbAdvId: String): AdvertiserSmartPxVariables {
-        val spx = AdvertiserSmartPxVariables()
-        spx.advertiserId = aid
-        spx.query = createRbClientAdvIdSpxFieldQuery(rbAdvId)
-        return spx
-    }
-
-    fun createRbClientUid(aid: Int): AdvertiserSmartPxVariables {
-        val spx = AdvertiserSmartPxVariables()
-        spx.advertiserId = aid
-        spx.query = createRbClientUidSpxFieldQuery()
-        return spx
     }
 }
