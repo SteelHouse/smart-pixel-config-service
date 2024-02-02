@@ -30,7 +30,7 @@ class RbClientSpxConfigController(
     )
     fun getAllRockerboxClients(): ResponseEntity<String> {
         // This is a test endpoint for development purpose. The client does not need this endpoint.
-        log.debug("got request to get all the rb clients' advertiserId and rockerboxAdvertiserId")
+        log.info("got request to get all the rb clients' advertiserId and rockerboxAdvertiserId")
 
         val allRbClients = rbClientSpxConfigService.getRbClients() ?: return ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
         return ResponseEntity.ok().body(ObjectMapper().writeValueAsString(allRbClients))
@@ -46,7 +46,7 @@ class RbClientSpxConfigController(
     ): ResponseEntity<String> {
         val advertiserId = rbClientConfig.advertiserId
         val rbAdvId = rbClientConfig.rbAdvId
-        log.debug("got request to upsert rb client. advertiser=[$advertiserId]; rbAdvId=[$rbAdvId]")
+        log.info("got request to upsert rb client. advertiser=[$advertiserId]; rbAdvId=[$rbAdvId]")
 
         if (advertiserId != advertiserIdInPath || !rbAdvId.isAlphanumericWithUnderscore()) {
             log.debug("advertiserId match? [${advertiserId == advertiserIdInPath}]; rbAdvId is valid? [${rbAdvId.isAlphanumericWithUnderscore()}]")
@@ -57,7 +57,7 @@ class RbClientSpxConfigController(
             ?: return ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
 
         return if (rbClientSpxMap.isEmpty()) {
-            val insertSucceed = rbClientSpxConfigService.insertRbClient(rbClientConfig.advertiserId, rbClientConfig.rbAdvId)
+            val insertSucceed = rbClientSpxConfigService.insertRbClient(rbClientConfig)
             log.info(logClientRequestResult(advertiserId, "insert", rbAdvId, insertSucceed))
             if (insertSucceed) ResponseEntity(HttpStatus.CREATED) else ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
         } else {
@@ -74,7 +74,7 @@ class RbClientSpxConfigController(
     fun deleteRockerboxClientByAdvertiserId(
         @PathVariable("advertiserId") advertiserId: Int
     ): ResponseEntity<String> {
-        log.debug("got request to delete rb client. advertiserId=[$advertiserId]")
+        log.info("got request to delete rb client. advertiserId=[$advertiserId]")
 
         val rbClientSpxMap = rbClientSpxConfigService.getRbClientSpxMapByAdvertiserId(advertiserId)
             ?: return ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)

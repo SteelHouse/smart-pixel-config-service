@@ -175,6 +175,37 @@ class RbClientSpxConfigServiceTest {
     }
 
     @Test
+    fun testIsRbAdvIdUnique() {
+        val config = RbClientConfig(advertiserId = 1, rbAdvId = "test")
+        val dbSpx = AdvertiserSmartPxVariables()
+
+        // Case: null from db
+        every { rbClientSpx.getRbClientsAdvIdSpxList() } answers { null }
+        assertFalse(service.isRbAdvIdUnique(config))
+
+        // Case: empty list from db
+        every { rbClientSpx.getRbClientsAdvIdSpxList() } answers { emptyList() }
+        assertTrue(service.isRbAdvIdUnique(config))
+
+        // Case: db spx has no rbAdvId in query
+        dbSpx.variableId = 1
+        dbSpx.advertiserId = 1
+        dbSpx.query = ""
+        every { rbClientSpx.getRbClientsAdvIdSpxList() } answers { listOf(dbSpx) }
+        assertTrue(service.isRbAdvIdUnique(config))
+
+        // Case: db spx has same advertiserId
+        dbSpx.query = "\"rb_adv_id=test"
+        every { rbClientSpx.getRbClientsAdvIdSpxList() } answers { listOf(dbSpx) }
+        assertTrue(service.isRbAdvIdUnique(config))
+
+        // Case: db spx has different advertiserId and same rbAdvId
+        dbSpx.advertiserId = 2
+        every { rbClientSpx.getRbClientsAdvIdSpxList() } answers { listOf(dbSpx) }
+        assertFalse(service.isRbAdvIdUnique(config))
+    }
+
+    @Test
     fun `updateRbClient validates spx and returns early if no update is needed`() {
         val config = RbClientConfig(advertiserId = aidPlaceholder, rbAdvId = rbAdvId)
 
