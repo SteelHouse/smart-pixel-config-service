@@ -57,7 +57,7 @@ class RbClientSpxConfigController(
             ?: return ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
 
         return if (rbClientSpxMap.isEmpty()) {
-            val insertSucceed = rbClientSpxConfigService.insertRbClient(rbClientConfig.advertiserId, rbClientConfig.rbAdvId)
+            val insertSucceed = rbClientSpxConfigService.insertRbClient(rbClientConfig)
             log.info(logClientRequestResult(advertiserId, "insert", rbAdvId, insertSucceed))
             if (insertSucceed) ResponseEntity(HttpStatus.CREATED) else ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
         } else {

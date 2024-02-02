@@ -113,14 +113,51 @@ class RbClientSpxConfigService(
      * Create SPXs for a new Rockerbox client, and returns a boolean flag indicating the status of action.
      * If there are errors during the spx creation process, remove the problematic spx if possible and return false.
      */
-    fun insertRbClient(advertiserId: Int, rbAdvId: String): Boolean {
+    fun insertRbClient(config: RbClientConfig): Boolean {
         log.debug("need to create a new rb client")
+
+        // Double-check whether the rbAdvId is unique
+        val isRbAdvIdUnique = isRbAdvIdUnique(config)
+        if (!isRbAdvIdUnique) return false
+
+        val advertiserId = config.advertiserId
+        val rbAdvId = config.rbAdvId
         val rbClientAdvIdSpx = createRbClientAdvIdSpx(advertiserId, rbAdvId)
         val rbClientUidSpx = advertiserId.createRbClientUidSpx()
         val insertSucceed = rbClientSpx.insertRbClientSPXs(listOf(rbClientAdvIdSpx, rbClientUidSpx))
         if (insertSucceed == true || insertSucceed == false) return insertSucceed
         removeProblematicRbClientSPXs(advertiserId)
         return false
+    }
+
+    /**
+     * Returns whether the Rockerbox Advertiser ID is unique in DB.
+     * This is a safe net because the client is supposed to do the uniqueness validation on their end.
+     * However, if the input value is ever not unique, we will mess up the data and there is no way to recover.
+     */
+    fun isRbAdvIdUnique(config: RbClientConfig): Boolean {
+        val inputAdvertiserId = config.advertiserId
+        val inputRbAdvId = config.rbAdvId
+        val advIdSpxListFromDB = rbClientSpx.getRbClientsAdvIdSpxList() ?: return false
+        if (advIdSpxListFromDB.isEmpty()) return true
+        advIdSpxListFromDB.forEach() { spx ->
+            val dbRbAdvId = retrieveRbAdvIdFromSpxFieldQuery(spx)
+            if (dbRbAdvId != null) {
+                if (dbRbAdvId == inputRbAdvId) {
+                    val dbAdverserId = spx.advertiserId
+                    if (dbAdverserId == inputAdvertiserId) {
+                        log.debug("same rdAdvId is allowed for the same advertiser")
+                    } else {
+                        log.error(
+                            "client request error: no uniqueness validation on rbAdvId. input advertiserId=[$inputAdvertiserId]; input rbAdvId=[$inputRbAdvId]; " +
+                                "\ndb advertiserId=[$dbAdverserId]; db rbAdvId=[$dbRbAdvId]; db spx=${getSpxInfoString(spx)}"
+                        )
+                        return false
+                    }
+                }
+            }
+        }
+        return true
     }
 
     private fun removeProblematicRbClientSPXs(advertiserId: Int) {
@@ -151,6 +188,10 @@ class RbClientSpxConfigService(
             log.debug("no change to the rockerbox advertiser id. no action needed.")
             return true
         }
+
+        // Double-check whether the rbAdvId is unique
+        val isRbAdvIdUnique = isRbAdvIdUnique(newConfig)
+        if (!isRbAdvIdUnique) return false
 
         // Update the Rockerbox client's getRockerBoxAdvID spx
         return rbClientSpx.updateRbClientAdvIdSpx(variableId, newRbAdvId)
@@ -189,7 +230,7 @@ class RbClientSpxConfigService(
         if (spx == null || spx.query == null) return null
         val result = findRegexMatchResultInString(rbClientAdvIdExtractorRegex, spx.query)
         if (result == null) {
-            log.error("wrong rb client found in db: no rb_adv_id in getRockerBoxAdvID spx. variableId=[${spx.variableId}]; advertiserId=[${spx.advertiserId}]")
+            log.error("wrong rb client found in db: no rb_adv_id in getRockerBoxAdvID spx. spx=${getSpxInfoString(spx)}")
             return null
         }
         return result
