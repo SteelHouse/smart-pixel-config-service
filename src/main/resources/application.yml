@@ -5,7 +5,7 @@ spring:
     url: jdbc:postgresql://core-dev-aurora.cluster-czcssluxaubs.us-west-2.rds.amazonaws.com:5432/steelhouse
     password: 'ENC(Atr4qapcYXZwxJhPb09ofQPFrFf4Em2+)'
     # PROD
-    # url: jdbc:postgresql://core-prod-aurora.cluster-ro-czcssluxaubs.us-west-2.rds.amazonaws.com:5432/steelhouse
+    # url: jdbc:postgresql://core-prod-aurora.cluster-czcssluxaubs.us-west-2.rds.amazonaws.com:5432/steelhouse
     # password: 'ENC(OyDUDWO7lecV1CsGaB0rJdT1OGsimYBO)'
   cache:
     cache-names: ['spxListByAidCache', 'spxListByFieldQueryCache']

@@ -1,7 +1,7 @@
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://core-prod-aurora.cluster-ro-czcssluxaubs.us-west-2.rds.amazonaws.com:5432/steelhouse
+    url: jdbc:postgresql://core-prod-aurora.cluster-czcssluxaubs.us-west-2.rds.amazonaws.com:5432/steelhouse
     username: steelhouse
     password: 'ENC(OyDUDWO7lecV1CsGaB0rJdT1OGsimYBO)'
   cache:
