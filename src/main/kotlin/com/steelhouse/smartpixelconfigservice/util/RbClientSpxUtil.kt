@@ -10,7 +10,7 @@ const val rbClientUidSpxFieldQueryKeyword = "getRockerBoxUID()"
 // let getRockerBoxAdvID = () => { let rb_adv_id = null; return "rb_adv_id=test_id"; }; getRockerBoxAdvID();
 const val rbClientAdvIdSpxFieldQueryKeyword = "getRockerBoxAdvID()"
 
-val rbClientAdvIdExtractorRegex = Regex("rb_adv_id=(\\w+)")
+val rbClientAdvIdExtractorRegex = Regex("rb_adv_id=[\\w-]+")
 
 fun String.isRbClientSpx(): Boolean {
     return this.isRbClientAdvIdSpx() || this.isRbClientUidSpx()

@@ -49,7 +49,7 @@ imagePullSecrets: codefresh-generated-docker.io-dockerhub-prod-pixel
 
 istio:
   enabled: true
-  domain: coredev.west2.steelhouse.com
+  domain: coreprod.west2.steelhouse.com
   selector: private
 
 autoscaling:
