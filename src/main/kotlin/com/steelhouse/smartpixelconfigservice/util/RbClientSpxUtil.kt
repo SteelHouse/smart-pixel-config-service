@@ -12,6 +12,18 @@ const val rbClientAdvIdSpxFieldQueryKeyword = "getRockerBoxAdvID()"
 
 val rbClientAdvIdExtractorRegex = Regex("rb_adv_id=[\\w-]+")
 
+// Rockerbox advertiser id can contain alphanumeric, underscore: [a-zA-Z0-9_] and hyphen: [-]
+val rbClientAdvIdRegex = Regex("[\\w-]+")
+
+fun String.isRbAdvIdValid(): Boolean {
+    return this.matches(rbClientAdvIdRegex)
+}
+
+fun findRbAdvIdInString(str: String): String? {
+    val matchResult = rbClientAdvIdExtractorRegex.find(str) ?: return null
+    return matchResult.groupValues[0].split("=")[1]
+}
+
 fun String.isRbClientSpx(): Boolean {
     return this.isRbClientAdvIdSpx() || this.isRbClientUidSpx()
 }

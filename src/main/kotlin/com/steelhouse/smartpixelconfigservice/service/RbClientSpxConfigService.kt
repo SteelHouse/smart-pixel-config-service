@@ -7,13 +7,12 @@ import com.steelhouse.smartpixelconfigservice.datasource.dao.rbClientAdvIdSpxTag
 import com.steelhouse.smartpixelconfigservice.datasource.dao.rbClientUidSpxTag
 import com.steelhouse.smartpixelconfigservice.util.createRbClientAdvIdSpx
 import com.steelhouse.smartpixelconfigservice.util.createRbClientUidSpx
-import com.steelhouse.smartpixelconfigservice.util.findRegexMatchResultInString
+import com.steelhouse.smartpixelconfigservice.util.findRbAdvIdInString
 import com.steelhouse.smartpixelconfigservice.util.getSpxInfoString
 import com.steelhouse.smartpixelconfigservice.util.getSpxListInfoString
 import com.steelhouse.smartpixelconfigservice.util.isRbClientAdvIdSpx
 import com.steelhouse.smartpixelconfigservice.util.isRbClientSpx
 import com.steelhouse.smartpixelconfigservice.util.isRbClientUidSpx
-import com.steelhouse.smartpixelconfigservice.util.rbClientAdvIdExtractorRegex
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -37,6 +36,7 @@ class RbClientSpxConfigService(
 
     /**
      * Returns a map of all the Rockerbox client's mntn advertiserId -> rbAdvertiserId or null if there are errors.
+     * It is guaranteed that the advertiser in the map are valid as having two Rockerbox related smart pixels.
      */
     fun getRbClients(): Map<Int, String>? {
         val advIdSpxList = rbClientSpx.getRbClientsAdvIdSpxList() ?: return null
@@ -44,6 +44,10 @@ class RbClientSpxConfigService(
         return getValidRbClientInfoMap(advIdSpxList, aidListFromUidSpx)
     }
 
+    /**
+     * Matches the getRockerBoxAdvID spx and getRockerBoxUID spx by advertiserId, filters out and log the solo ones
+     * and returns a map of advertiserId --> rbAdvertiserId.
+     */
     fun getValidRbClientInfoMap(advIdSpxList: List<AdvertiserSmartPxVariables>, aidListFromUidSpx: MutableList<Int>): Map<Int, String> {
         val map = mutableMapOf<Int, String>()
         advIdSpxList.forEach { spx ->
@@ -132,7 +136,7 @@ class RbClientSpxConfigService(
 
     /**
      * Returns whether the Rockerbox Advertiser ID is unique in DB.
-     * This is a safe net because the client is supposed to do the uniqueness validation on their end.
+     * This is a safe net because the client should have done the uniqueness validation on their end.
      * However, if the input value is ever not unique, we will mess up the data and there is no way to recover.
      */
     fun isRbAdvIdUnique(config: RbClientConfig): Boolean {
@@ -206,6 +210,7 @@ class RbClientSpxConfigService(
         val variableIds = mutableListOf<Int>()
 
         // Double-check the pixels are rb client spx before deletion and add the pixel's variableId to the deletion list if applicable
+        // In theory, there should be no error because the input map is retrieved by this service and guaranteed to be valid.
         spxList.forEach { spx ->
             val query = spx.query
             val pixelInfoString = getSpxInfoString(spx)
@@ -228,7 +233,7 @@ class RbClientSpxConfigService(
 
     private fun retrieveRbAdvIdFromSpxFieldQuery(spx: AdvertiserSmartPxVariables?): String? {
         if (spx == null || spx.query == null) return null
-        val result = findRegexMatchResultInString(rbClientAdvIdExtractorRegex, spx.query)
+        val result = findRbAdvIdInString(spx.query)
         if (result == null) {
             log.error("wrong rb client found in db: no rb_adv_id in getRockerBoxAdvID spx. spx=${getSpxInfoString(spx)}")
             return null

@@ -3,7 +3,7 @@ package com.steelhouse.smartpixelconfigservice.controller
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.steelhouse.smartpixelconfigservice.config.RbClientConfig
 import com.steelhouse.smartpixelconfigservice.service.RbClientSpxConfigService
-import com.steelhouse.smartpixelconfigservice.util.isAlphanumericWithUnderscore
+import com.steelhouse.smartpixelconfigservice.util.isRbAdvIdValid
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.springframework.http.HttpStatus
@@ -48,8 +48,8 @@ class RbClientSpxConfigController(
         val rbAdvId = rbClientConfig.rbAdvId
         log.info("got request to upsert rb client. advertiser=[$advertiserId]; rbAdvId=[$rbAdvId]")
 
-        if (advertiserId != advertiserIdInPath || !rbAdvId.isAlphanumericWithUnderscore()) {
-            log.debug("advertiserId match? [${advertiserId == advertiserIdInPath}]; rbAdvId is valid? [${rbAdvId.isAlphanumericWithUnderscore()}]")
+        if (advertiserId != advertiserIdInPath || !rbAdvId.isRbAdvIdValid()) {
+            log.debug("advertiserId match? [${advertiserId == advertiserIdInPath}]; rbAdvId is valid? [${rbAdvId.isRbAdvIdValid()}]")
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
 

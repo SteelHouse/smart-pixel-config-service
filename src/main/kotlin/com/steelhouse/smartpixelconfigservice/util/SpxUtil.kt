@@ -2,15 +2,6 @@ package com.steelhouse.smartpixelconfigservice.util
 
 import com.steelhouse.postgresql.publicschema.AdvertiserSmartPxVariables
 
-fun String.isAlphanumericWithUnderscore(): Boolean {
-    val regex = Regex("[\\w-]+")
-    return this.matches(regex)
-}
-fun findRegexMatchResultInString(regex: Regex, str: String): String? {
-    val matchResult = regex.find(str) ?: return null
-    return matchResult.groupValues[0].split("=")[1]
-}
-
 fun getSpxListInfoString(list: List<AdvertiserSmartPxVariables>): String {
     var str = ""
     list.forEach { spx -> str += (getSpxInfoString(spx)) }
