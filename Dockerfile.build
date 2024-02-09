@@ -1,0 +1,10 @@
+FROM steelhousedev/slim-codefresh-11:7.4.2
+
+COPY .git /usr/src/app/.git
+COPY build.gradle.kts ./
+COPY gradle.properties ./
+COPY settings.gradle.kts ./
+RUN gradle build -x test
+RUN rm -rf build
+COPY [".","/usr/src/app"]
+CMD ["gradle","test"]

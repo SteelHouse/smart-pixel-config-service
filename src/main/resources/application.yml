@@ -1,0 +1,34 @@
+spring:
+  datasource:
+    username: steelhouse
+    # DEV
+    url: jdbc:postgresql://core-dev-aurora.cluster-czcssluxaubs.us-west-2.rds.amazonaws.com:5432/steelhouse
+    password: 'ENC(Atr4qapcYXZwxJhPb09ofQPFrFf4Em2+)'
+    # PROD
+    # url: jdbc:postgresql://core-prod-aurora.cluster-czcssluxaubs.us-west-2.rds.amazonaws.com:5432/steelhouse
+    # password: 'ENC(OyDUDWO7lecV1CsGaB0rJdT1OGsimYBO)'
+  cache:
+    cache-names: ['spxListByAidCache', 'spxListByFieldQueryCache']
+    caffeine:
+      spec: expireAfterWrite=1m
+
+logging:
+  file:
+    path: ./log
+  level:
+    com.steelhouse: DEBUG
+
+management:
+  endpoint:
+    health:
+      show-details: always
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  # Expose metrics endpoints at "/"
+  endpoints:
+    web:
+      base-path: /
+      exposure:
+        include: '*'

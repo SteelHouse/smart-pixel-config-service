@@ -1,0 +1,57 @@
+package com.steelhouse.smartpixelconfigservice.datasource.dao
+
+import com.steelhouse.postgresql.publicschema.AdvertiserSmartPxVariables
+import com.steelhouse.smartpixelconfigservice.datasource.repository.SpxRepository
+import com.steelhouse.smartpixelconfigservice.util.createRbClientAdvIdSpxFieldQuery
+import com.steelhouse.smartpixelconfigservice.util.rbClientAdvIdSpxFieldQueryKeyword
+import com.steelhouse.smartpixelconfigservice.util.rbClientUidSpxFieldQueryKeyword
+import io.prometheus.client.Counter
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.stereotype.Component
+
+const val rbClientUidSpxTag = "rbClientUidSpx"
+const val rbClientAdvIdSpxTag = "rbClientAdvIdSpx"
+
+@Component
+class RbClientSpx(
+    sqlCounter: Counter,
+    jdbcTemplate: JdbcTemplate,
+    spxRepository: SpxRepository
+) : Spx(sqlCounter, jdbcTemplate, spxRepository) {
+
+    private val log: Logger = LoggerFactory.getLogger(this.javaClass)
+
+    // SQL query to insert a spx record with the advertiser_id and query as variables
+    val sqlToInsertSpxAdvertiserIdAndQuery = """
+            INSERT INTO advertiser_smart_px_variables
+            (advertiser_id, trpx_call_parameter_defaults_id, query, query_type, active, regex, regex_replace, regex_replace_value, regex_replace_modifier, endpoint)
+            VALUES(?, 34, ?, 3, true, null, null, null, null, 'spx');
+    """.trimIndent()
+
+    fun getRbClientsUidSpxList(): List<AdvertiserSmartPxVariables>? {
+        return getSpxListByFieldQueryKeyword(rbClientUidSpxFieldQueryKeyword)
+    }
+
+    fun getRbClientsAdvIdSpxList(): List<AdvertiserSmartPxVariables>? {
+        return getSpxListByFieldQueryKeyword(rbClientAdvIdSpxFieldQueryKeyword)
+    }
+
+    fun updateRbClientAdvIdSpx(variableId: Int, rbAdvId: String): Boolean {
+        val newQuery = rbAdvId.createRbClientAdvIdSpxFieldQuery()
+        log.debug("need to update an existing rb client's getRockerBoxAdvID spx. variableId=[$variableId]; new query=[$newQuery]")
+        return updateSpxFieldQuery(variableId, newQuery)
+    }
+
+    /**
+     * Returns the status of Rockerbox client pixels creation.
+     *
+     * @return true for success
+     *         null for unknown db error, need further action to recover
+     *         false for unknown db exception
+     */
+    fun insertRbClientSPXs(list: List<AdvertiserSmartPxVariables>): Boolean? {
+        return batchInsertSPXsBySqlQuery(list, sqlToInsertSpxAdvertiserIdAndQuery)
+    }
+}
