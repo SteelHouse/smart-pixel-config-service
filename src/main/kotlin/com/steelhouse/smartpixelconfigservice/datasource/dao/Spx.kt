@@ -2,7 +2,7 @@ package com.steelhouse.smartpixelconfigservice.datasource.dao
 
 import com.steelhouse.postgresql.publicschema.AdvertiserSmartPxVariables
 import com.steelhouse.smartpixelconfigservice.datasource.repository.SpxRepository
-import com.steelhouse.smartpixelconfigservice.util.getSpxListInfoString
+import com.steelhouse.smartpixelconfigservice.util.getSpxListFieldQueryInfoString
 import io.prometheus.client.Counter
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -24,26 +24,28 @@ class Spx(
 
     @Cacheable("spxListByAidCache")
     fun getSpxListByAdvertiserId(advertiserId: Int): List<AdvertiserSmartPxVariables>? {
-        val query = """
+        return queryDbForSpxList(createSqlQueryToGetByAdvertiserId(advertiserId))
+    }
+    private fun createSqlQueryToGetByAdvertiserId(advertiserId: Int): String {
+        return """
             SELECT * 
             FROM advertiser_smart_px_variables
-            WHERE advertiser_id = '$advertiserId';
-        """
-        return queryDbForSpxList(query)
+            WHERE advertiser_id = '$advertiserId'
+        """.trimIndent()
     }
 
     @Cacheable("spxListByFieldQueryCache")
     fun getSpxListByFieldQueryKeyword(keyword: String): List<AdvertiserSmartPxVariables>? {
-        val sql = createIlikeSqlQuery(keyword)
-        return queryDbForSpxList(sql)
+        val sqlQuery = createIlikeSqlQuery(keyword)
+        return queryDbForSpxList(sqlQuery)
     }
 
     private fun createIlikeSqlQuery(keyword: String): String {
         return """
             SELECT * 
             FROM advertiser_smart_px_variables
-            WHERE query ILIKE '%$keyword%';
-        """
+            WHERE query ILIKE '%$keyword%'
+        """.trimIndent()
     }
 
     private fun queryDbForSpxList(sql: String): List<AdvertiserSmartPxVariables>? {
@@ -53,31 +55,31 @@ class Spx(
             log.debug("no spx found in db. sql=[$sql]")
             return emptyList()
         } catch (e: Exception) {
-            log.error("unknown db exception to get spx. sql=[$sql]; error message=[${e.message}]")
+            log.error("unknown db exception to get data. sql=[$sql]; error message=[${e.message}]")
             sqlCounter.labels("advertiser_smart_px_variables", "select", "error").inc()
         }
         return null
     }
 
     fun updateSpxFieldQuery(variableId: Int, query: String): Boolean {
-        val sql = createSqlQueryToUpdateSpxFieldQuery(variableId, query)
+        val sqlQuery = createSqlQueryToUpdateSpxFieldQueryByVariableId(variableId, query)
         return try {
-            jdbcTemplate.update(sql)
+            jdbcTemplate.update(sqlQuery)
             sqlCounter.labels("advertiser_smart_px_variables", "update", "ok").inc()
             true
         } catch (e: Exception) {
-            log.error("unknown db exception to update spx. sql=[$sql]; error message=[${e.message}]")
+            log.error("unknown db exception to update data. sql=[$sqlQuery]; error message=[${e.message}]")
             sqlCounter.labels("advertiser_smart_px_variables", "update", "error").inc()
             false
         }
     }
 
-    private fun createSqlQueryToUpdateSpxFieldQuery(variableId: Int, query: String): String {
+    private fun createSqlQueryToUpdateSpxFieldQueryByVariableId(variableId: Int, query: String): String {
         return """
            UPDATE advertiser_smart_px_variables
            SET query = '$query'
            WHERE variable_id = '$variableId'
-        """
+        """.trimIndent()
     }
 
     /**
@@ -89,20 +91,20 @@ class Spx(
      */
     fun batchInsertSPXsBySqlQuery(list: List<AdvertiserSmartPxVariables>, sql: String): Boolean? {
         val listSize = list.size
-        val pixelsInfoString = getSpxListInfoString(list)
+        val logString = getSpxListFieldQueryInfoString(list)
         return try {
             val resultSize = batchUpdateSpxAdvertiserIdAndQueryBySqlQuery(list, sql).size
             if (resultSize == listSize) {
-                log.debug("$resultSize pixels have been created")
+                log.debug("$resultSize spx have been created")
                 sqlCounter.labels("advertiser_smart_px_variables", "batch_update", "ok").inc()
                 true
             } else {
-                log.error("problems with db batch update: recovery needed. returned result=[$resultSize]; $pixelsInfoString")
+                log.error("problems with db batch update: recovery needed. returned result=[$resultSize]; $logString")
                 sqlCounter.labels("advertiser_smart_px_variables", "batch_update", "error").inc()
                 null
             }
         } catch (e: Exception) {
-            log.error("unknown db exception to batch update. error message=[${e.message}]; $pixelsInfoString")
+            log.error("unknown db exception to batch update. error message=[${e.message}]; $logString")
             sqlCounter.labels("advertiser_smart_px_variables", "batch_update", "error").inc()
             false
         }
@@ -132,7 +134,7 @@ class Spx(
             sqlCounter.labels("advertiser_smart_px_variables", "delete", "ok").inc()
             true
         } catch (e: Exception) {
-            log.error("unknown db exception to delete spx. variableIds=[$ids]; error message=[${e.message}]")
+            log.error("unknown db exception to delete data. variableIds=[$ids]; error message=[${e.message}]")
             sqlCounter.labels("advertiser_smart_px_variables", "delete", "error").inc()
             false
         }

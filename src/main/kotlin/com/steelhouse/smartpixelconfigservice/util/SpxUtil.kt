@@ -2,12 +2,12 @@ package com.steelhouse.smartpixelconfigservice.util
 
 import com.steelhouse.postgresql.publicschema.AdvertiserSmartPxVariables
 
-fun getSpxListInfoString(list: List<AdvertiserSmartPxVariables>): String {
+fun getSpxListFieldQueryInfoString(list: List<AdvertiserSmartPxVariables>): String {
     var str = ""
-    list.forEach { spx -> str += (getSpxInfoString(spx)) }
+    list.forEach { spx -> str += (getSpxFieldQueryInfoString(spx)) }
     return str
 }
 
-fun getSpxInfoString(spx: AdvertiserSmartPxVariables): String {
+fun getSpxFieldQueryInfoString(spx: AdvertiserSmartPxVariables): String {
     return "\t{variableId=[${spx.variableId}]; advertiserId=[${spx.advertiserId}]; query=[${spx.query.trimIndent()}]}"
 }

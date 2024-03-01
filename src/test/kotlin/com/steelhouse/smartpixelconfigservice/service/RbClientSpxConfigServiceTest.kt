@@ -85,7 +85,7 @@ class RbClientSpxConfigServiceTest {
         every { rbClientSpx.getRbClientsAdvIdSpxList() } answers { listOf(advIdSpx) }
         every { rbClientSpx.getRbClientsUidSpxList() } answers { listOf(uidSpx) }
         // Invoke the function and test
-        assertEquals(emptyMap<String, AdvertiserSmartPxVariables>(), service.getRbClients())
+        assertEquals(emptyMap<Int, String>(), service.getRbClients())
 
         // Test Rockerbox client values
         // Prepare data
@@ -147,13 +147,13 @@ class RbClientSpxConfigServiceTest {
 
     @Test
     fun `getRbClientSpxInfoFromDbByAdvertiserId returns null or map`() {
-        // Test null pixel
+        // Test null spx
         // Stub behavior for the mocked properties
         every { rbClientSpx.getSpxListByAdvertiserId(any()) } answers { null }
         // Invoke the function and test
         assertNull(service.getRbClientSpxInfoFromDbByAdvertiserId(0))
 
-        // Test empty list of pixels
+        // Test empty list of spx
         // Stub behavior for the mocked properties
         every { rbClientSpx.getSpxListByAdvertiserId(any()) } answers { emptyList() }
         // Invoke the function and test
