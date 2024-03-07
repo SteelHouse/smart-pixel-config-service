@@ -41,7 +41,7 @@ repositories {
 }
 
 val jasyptVersion = "2.1.2"
-val steelhouseDomainPostgresVersion = "0.54"
+val steelhouseDomainPostgresVersion = "0.58"
 val swaggerVersion = "2.8.0"
 
 dependencies {

@@ -26,6 +26,13 @@ class Spx(
     fun getSpxListByAdvertiserId(advertiserId: Int): List<AdvertiserSmartPxVariables>? {
         return queryDbForSpxList(createSqlQueryToGetByAdvertiserId(advertiserId))
     }
+
+    fun getSpxListByAdvertiserId(advertiserId: Int, trpxCallParameterDefaultsIdList: List<String>): List<AdvertiserSmartPxVariables>? {
+        var sqlQuery = createSqlQueryToGetByAdvertiserId(advertiserId)
+        if (trpxCallParameterDefaultsIdList.isNotEmpty()) sqlQuery += " AND trpx_call_parameter_defaults_id IN (" + trpxCallParameterDefaultsIdList.joinToString() + ")"
+        return queryDbForSpxList(sqlQuery)
+    }
+
     private fun createSqlQueryToGetByAdvertiserId(advertiserId: Int): String {
         return """
             SELECT * 
@@ -49,6 +56,7 @@ class Spx(
     }
 
     private fun queryDbForSpxList(sql: String): List<AdvertiserSmartPxVariables>? {
+        log.debug("sql=[\n$sql\n]")
         try {
             return jdbcTemplate.query(sql, BeanPropertyRowMapper(AdvertiserSmartPxVariables::class.java))
         } catch (e: EmptyResultDataAccessException) {
