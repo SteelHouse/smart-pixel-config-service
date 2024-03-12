@@ -15,20 +15,27 @@ class MultipleTables(
     private val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
     @Transactional
-    fun updateMultipleTables(queries: List<String>): Boolean? {
-        return try {
+    fun updateMultipleTables(queries: List<String>): Status {
+        var totalRowsMatched = 0
+        try {
             // Execute updates on multiple tables within a transaction
             for (query in queries) {
-                jdbcTemplate.update(query)
+                val rowsMatched = jdbcTemplate.update(query)
+                log.debug("$rowsMatched rows matched for sql=[\n$query\n]")
+                totalRowsMatched += rowsMatched
             }
             // Commit the transaction
-            true
+            log.debug("total $totalRowsMatched rows matched")
+            sqlCounter.labels("multiple_tables", "batch_update", "ok").inc()
+            return if (totalRowsMatched > 0) Status(true, null)
+            else Status(true, "nothing to update")
         } catch (e: Exception) {
             // Rollback transaction if any update fails
             log.error("unknown db exception to batch update multiple tables. error message=[${e.message}]")
             sqlCounter.labels("multiple_tables", "batch_update", "error").inc()
-            // Rethrow the exception so the error message can be delivered to the client
-            throw e
+            return Status(false, e.message)
         }
     }
 }
+
+data class Status(val isSuccess: Boolean, val message: String?)

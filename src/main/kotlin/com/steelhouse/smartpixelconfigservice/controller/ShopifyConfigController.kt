@@ -28,15 +28,17 @@ class ShopifyConfigController(
         @PathVariable("advertiserId") advertiserId: Int
     ): ResponseEntity<String> {
         log.info("got request to migrate shopify conversion pixel. advertiser=[$advertiserId]")
-        try {
-            val updateSucceed = shopifyConfigService.migrateConversionPixel(advertiserId)
-            return if (updateSucceed == true) ResponseEntity(HttpStatus.OK) else ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
-        } catch (e: Exception) {
-            val responseHeaders = HttpHeaders()
-            responseHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN_VALUE)
-            return ResponseEntity.internalServerError()
-                .headers(responseHeaders)
-                .body(e.message)
-        }
+
+        val responseHeaders = HttpHeaders()
+        responseHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN_VALUE)
+
+        val updateStatus = shopifyConfigService.migrateConversionPixel(advertiserId)
+
+        if (!updateStatus.isSuccess) return ResponseEntity.internalServerError().headers(responseHeaders).body(updateStatus.message)
+
+        if (updateStatus.message == null) return ResponseEntity(HttpStatus.OK)
+
+        log.error("client request error: nothing for shopify conversion pixel migration. advertiserId=[$advertiserId].")
+        return ResponseEntity.badRequest().headers(responseHeaders).body(updateStatus.message)
     }
 }
