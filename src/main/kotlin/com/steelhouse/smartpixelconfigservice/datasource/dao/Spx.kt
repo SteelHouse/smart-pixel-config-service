@@ -36,11 +36,10 @@ class Spx(
 
     @Cacheable("spxListByFieldQueryCache")
     fun getSpxListByFieldQueryKeyword(keyword: String): List<AdvertiserSmartPxVariables>? {
-        val sqlQuery = createIlikeSqlQuery(keyword)
-        return queryDbForSpxList(sqlQuery)
+        return queryDbForSpxList(createSqlQueryToGetByFieldQueryKeyword(keyword))
     }
 
-    private fun createIlikeSqlQuery(keyword: String): String {
+    private fun createSqlQueryToGetByFieldQueryKeyword(keyword: String): String {
         return """
             SELECT * 
             FROM advertiser_smart_px_variables

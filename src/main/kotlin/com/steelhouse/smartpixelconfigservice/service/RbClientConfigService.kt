@@ -2,24 +2,24 @@ package com.steelhouse.smartpixelconfigservice.service
 
 import com.steelhouse.postgresql.publicschema.AdvertiserSmartPxVariables
 import com.steelhouse.smartpixelconfigservice.config.RbClientConfig
-import com.steelhouse.smartpixelconfigservice.datasource.dao.RbClientSpx
+import com.steelhouse.smartpixelconfigservice.datasource.dao.SpxForRbClient
 import com.steelhouse.smartpixelconfigservice.datasource.dao.rbClientAdvIdSpxTag
 import com.steelhouse.smartpixelconfigservice.datasource.dao.rbClientUidSpxTag
-import com.steelhouse.smartpixelconfigservice.util.createRbClientAdvIdSpx
-import com.steelhouse.smartpixelconfigservice.util.createRbClientUidSpx
+import com.steelhouse.smartpixelconfigservice.util.createSpxForRbClientAdvId
+import com.steelhouse.smartpixelconfigservice.util.createSpxForRbClientUid
 import com.steelhouse.smartpixelconfigservice.util.findRbAdvIdInString
 import com.steelhouse.smartpixelconfigservice.util.getSpxFieldQueryInfoString
 import com.steelhouse.smartpixelconfigservice.util.getSpxListFieldQueryInfoString
-import com.steelhouse.smartpixelconfigservice.util.isRbClientAdvIdSpx
-import com.steelhouse.smartpixelconfigservice.util.isRbClientSpx
-import com.steelhouse.smartpixelconfigservice.util.isRbClientUidSpx
+import com.steelhouse.smartpixelconfigservice.util.isSpxForRbClient
+import com.steelhouse.smartpixelconfigservice.util.isSpxForRbClientAdvId
+import com.steelhouse.smartpixelconfigservice.util.isSpxForRbClientUid
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
 @Component
-class RbClientSpxConfigService(
-    private val rbClientSpx: RbClientSpx
+class RbClientConfigService(
+    private val spx: SpxForRbClient
 ) {
     private val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
@@ -28,7 +28,7 @@ class RbClientSpxConfigService(
      * The list is retrieved from the getRockerBoxUID spx list.
      */
     fun getRbClientsAdvertiserIdListFromUidSpx(): MutableList<Int>? {
-        val rbClientsUidSpxList = rbClientSpx.getRbClientsUidSpxList() ?: return null
+        val rbClientsUidSpxList = spx.getRbClientsUidSpxList() ?: return null
         val list = mutableListOf<Int>()
         rbClientsUidSpxList.forEach { spx -> list.add(spx.advertiserId) }
         return list
@@ -39,7 +39,7 @@ class RbClientSpxConfigService(
      * It is guaranteed that the advertiser in the map are valid as having two Rockerbox related smart pixels.
      */
     fun getRbClients(): Map<Int, String>? {
-        val rbClientAdvIdSpxList = rbClientSpx.getRbClientsAdvIdSpxList() ?: return null
+        val rbClientAdvIdSpxList = spx.getRbClientsAdvIdSpxList() ?: return null
         val rbClientAdvertiserIdListFromUidSpx = getRbClientsAdvertiserIdListFromUidSpx() ?: return null
         return getValidRbClientInfoMap(rbClientAdvIdSpxList, rbClientAdvertiserIdListFromUidSpx)
     }
@@ -90,13 +90,13 @@ class RbClientSpxConfigService(
      * }
      */
     fun getRbClientSpxInfoFromDbByAdvertiserId(advertiserId: Int): Map<String, AdvertiserSmartPxVariables>? {
-        val spxList = rbClientSpx.getSpxListByAdvertiserId(advertiserId) ?: return null
+        val spxList = spx.getSpxListByAdvertiserId(advertiserId) ?: return null
         if (spxList.isEmpty()) return emptyMap()
         val map = mutableMapOf<String, AdvertiserSmartPxVariables>()
         spxList.forEach { spx ->
             val query = spx.query
-            if (query.isRbClientUidSpx()) map[rbClientUidSpxTag] = spx
-            if (query.isRbClientAdvIdSpx()) map[rbClientAdvIdSpxTag] = spx
+            if (query.isSpxForRbClientUid()) map[rbClientUidSpxTag] = spx
+            if (query.isSpxForRbClientAdvId()) map[rbClientAdvIdSpxTag] = spx
         }
         return map
     }
@@ -126,9 +126,9 @@ class RbClientSpxConfigService(
 
         val advertiserId = config.advertiserId
         val rbAdvId = config.rbAdvId
-        val rbClientAdvIdSpx = createRbClientAdvIdSpx(advertiserId, rbAdvId)
-        val rbClientUidSpx = advertiserId.createRbClientUidSpx()
-        val insertSucceed = rbClientSpx.insertRbClientSPXs(listOf(rbClientAdvIdSpx, rbClientUidSpx))
+        val rbClientAdvIdSpx = createSpxForRbClientAdvId(advertiserId, rbAdvId)
+        val rbClientUidSpx = advertiserId.createSpxForRbClientUid()
+        val insertSucceed = spx.insertRbClientSPXs(listOf(rbClientAdvIdSpx, rbClientUidSpx))
         if (insertSucceed == true || insertSucceed == false) return insertSucceed
         removeProblematicRbClientSPXs(advertiserId)
         return false
@@ -142,7 +142,7 @@ class RbClientSpxConfigService(
     fun isRbAdvIdUnique(config: RbClientConfig): Boolean {
         val inputAdvertiserId = config.advertiserId
         val inputRbAdvId = config.rbAdvId
-        val advIdSpxListFromDB = rbClientSpx.getRbClientsAdvIdSpxList() ?: return false
+        val advIdSpxListFromDB = spx.getRbClientsAdvIdSpxList() ?: return false
         if (advIdSpxListFromDB.isEmpty()) return true
         advIdSpxListFromDB.forEach() { spx ->
             val dbRbAdvId = retrieveRbAdvIdFromSpxFieldQuery(spx)
@@ -198,7 +198,7 @@ class RbClientSpxConfigService(
         if (!isRbAdvIdUnique) return false
 
         // Update the Rockerbox client's getRockerBoxAdvID spx
-        return rbClientSpx.updateRbClientAdvIdSpx(variableId, newRbAdvId)
+        return spx.updateRbClientAdvIdSpx(variableId, newRbAdvId)
     }
 
     /**
@@ -219,7 +219,7 @@ class RbClientSpxConfigService(
                 log.error("wrong rb client found in db: wrong spx retrieved for advertiserId=[$advertiserId]. spx=$logString")
                 return false
             }
-            if (query.isRbClientSpx()) {
+            if (query.isSpxForRbClient()) {
                 log.debug("added rb client spx to deletion list for advertiserID=[$advertiserId]... spx=$logString")
                 variableIds.add(spx.variableId)
             } else {
@@ -228,7 +228,7 @@ class RbClientSpxConfigService(
                 return false
             }
         }
-        return rbClientSpx.deleteSPXsByVariableIds(variableIds)
+        return spx.deleteSPXsByVariableIds(variableIds)
     }
 
     private fun retrieveRbAdvIdFromSpxFieldQuery(spx: AdvertiserSmartPxVariables?): String? {

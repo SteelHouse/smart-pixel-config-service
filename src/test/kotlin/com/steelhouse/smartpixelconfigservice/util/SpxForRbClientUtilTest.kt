@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
-class RbClientSpxUtilTest {
+class SpxForRbClientUtilTest {
 
     @Test
     fun testIsRbAdvIdValid() {
@@ -42,41 +42,41 @@ class RbClientSpxUtilTest {
     }
 
     @Test
-    fun testIsRbClientSpx() {
-        assertFalse("".isRbClientSpx())
-        assertFalse("dummy".isRbClientSpx())
-        assertFalse("getRockerBoxAdvID".isRbClientSpx())
-        assertFalse("getRockerBoxUID".isRbClientSpx())
-        assertTrue("getRockerBoxAdvID()".isRbClientSpx())
-        assertTrue("getRockerBoxUID()".isRbClientSpx())
+    fun testIsSpxForRbClient() {
+        assertFalse("".isSpxForRbClient())
+        assertFalse("dummy".isSpxForRbClient())
+        assertFalse("getRockerBoxAdvID".isSpxForRbClient())
+        assertFalse("getRockerBoxUID".isSpxForRbClient())
+        assertTrue("getRockerBoxAdvID()".isSpxForRbClient())
+        assertTrue("getRockerBoxUID()".isSpxForRbClient())
     }
 
     @Test
-    fun testIsRbClientAdvIdSpx() {
-        assertFalse("".isRbClientAdvIdSpx())
-        assertFalse("dummy".isRbClientAdvIdSpx())
-        assertFalse("getRockerBoxAdvID".isRbClientAdvIdSpx())
-        assertTrue("getRockerBoxAdvID()".isRbClientAdvIdSpx())
+    fun testIsSpxForRbClientAdvId() {
+        assertFalse("".isSpxForRbClientAdvId())
+        assertFalse("dummy".isSpxForRbClientAdvId())
+        assertFalse("getRockerBoxAdvID".isSpxForRbClientAdvId())
+        assertTrue("getRockerBoxAdvID()".isSpxForRbClientAdvId())
     }
 
     @Test
-    fun testIsRbClientUidSpx() {
-        assertFalse("".isRbClientUidSpx())
-        assertFalse("dummy".isRbClientUidSpx())
-        assertFalse("getRockerBoxUID".isRbClientUidSpx())
-        assertTrue("getRockerBoxUID()".isRbClientUidSpx())
+    fun testIsSpxForRbClientUid() {
+        assertFalse("".isSpxForRbClientUid())
+        assertFalse("dummy".isSpxForRbClientUid())
+        assertFalse("getRockerBoxUID".isSpxForRbClientUid())
+        assertTrue("getRockerBoxUID()".isSpxForRbClientUid())
     }
 
     @Test
-    fun testCreateRbClientAdvIdSpxFieldQuery() {
-        Assertions.assertEquals(
+    fun testCreateFieldQueryOfSpxForRbClientAdvId() {
+        assertEquals(
             """let getRockerBoxAdvID = () => { let rb_adv_id = null; return "rb_adv_id=dummy_id"; }; getRockerBoxAdvID();""",
-            "dummy_id".createRbClientAdvIdSpxFieldQuery()
+            "dummy_id".createFieldQueryOfSpxForRbClientAdvId()
         )
     }
 
     @Test
-    fun testCreateRbClientUidSpxFieldQuery() {
-        // print(getRbClientUidSpxFieldQuery())
+    fun testGetFieldQueryOfSpxForRbClientUiy() {
+        // print(getFieldQueryOfSpxForRbClientUid())
     }
 }
