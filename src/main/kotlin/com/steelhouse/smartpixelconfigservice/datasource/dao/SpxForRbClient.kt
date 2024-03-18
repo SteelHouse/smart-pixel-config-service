@@ -2,9 +2,9 @@ package com.steelhouse.smartpixelconfigservice.datasource.dao
 
 import com.steelhouse.postgresql.publicschema.AdvertiserSmartPxVariables
 import com.steelhouse.smartpixelconfigservice.datasource.repository.SpxRepository
-import com.steelhouse.smartpixelconfigservice.util.createRbClientAdvIdSpxFieldQuery
-import com.steelhouse.smartpixelconfigservice.util.rbClientAdvIdSpxFieldQueryKeyword
-import com.steelhouse.smartpixelconfigservice.util.rbClientUidSpxFieldQueryKeyword
+import com.steelhouse.smartpixelconfigservice.util.createFieldQueryOfSpxForRbClientAdvId
+import com.steelhouse.smartpixelconfigservice.util.keywordToFindSpxForRbClientAdvId
+import com.steelhouse.smartpixelconfigservice.util.keywordToFindSpxForRbClientUid
 import io.prometheus.client.Counter
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -22,7 +22,7 @@ const val rbClientAdvIdSpxTag = "rbClientAdvIdSpx"
  * - getRockerBoxUID(uid): retrieves the Rockerbox user id
  */
 @Component
-class RbClientSpx(
+class SpxForRbClient(
     sqlCounter: Counter,
     jdbcTemplate: JdbcTemplate,
     spxRepository: SpxRepository
@@ -34,18 +34,18 @@ class RbClientSpx(
      * Gets all the Rockerbox client's getRockerBoxUID(uid) spx.
      */
     fun getRbClientsUidSpxList(): List<AdvertiserSmartPxVariables>? {
-        return getSpxListByFieldQueryKeyword(rbClientUidSpxFieldQueryKeyword)
+        return getSpxListByFieldQueryKeyword(keywordToFindSpxForRbClientUid)
     }
 
     /**
      * Gets all the Rockerbox clients' getRockerBoxAdvID(advId) spx.
      */
     fun getRbClientsAdvIdSpxList(): List<AdvertiserSmartPxVariables>? {
-        return getSpxListByFieldQueryKeyword(rbClientAdvIdSpxFieldQueryKeyword)
+        return getSpxListByFieldQueryKeyword(keywordToFindSpxForRbClientAdvId)
     }
 
     fun updateRbClientAdvIdSpx(variableId: Int, rbAdvId: String): Boolean {
-        val newQuery = rbAdvId.createRbClientAdvIdSpxFieldQuery()
+        val newQuery = rbAdvId.createFieldQueryOfSpxForRbClientAdvId()
         log.debug("need to update an existing rb client's getRockerBoxAdvID spx. variableId=[$variableId]; new query=[$newQuery]")
         return updateSpxFieldQuery(variableId, newQuery)
     }

@@ -4,55 +4,55 @@ import com.steelhouse.postgresql.publicschema.AdvertiserSmartPxVariables
 
 // Rockerbox client's getRockerBoxUID(uid) spx looks like:
 // let getRockerBoxUID = () => { let rb_uid = null; try{ rb_uid = `rb_uid=${document.cookie.split("rbuid=")[1].split(";")[0].trim()}`; }catch(e){ rb_uid = null }; return rb_uid }; getRockerBoxUID();
-const val rbClientUidSpxFieldQueryKeyword = "getRockerBoxUID()"
+const val keywordToFindSpxForRbClientUid = "getRockerBoxUID()"
 
 // Rockerbox client's getRockerBoxAdvID(advId) spx looks like:
 // let getRockerBoxAdvID = () => { let rb_adv_id = null; return "rb_adv_id=test_id"; }; getRockerBoxAdvID();
-const val rbClientAdvIdSpxFieldQueryKeyword = "getRockerBoxAdvID()"
+const val keywordToFindSpxForRbClientAdvId = "getRockerBoxAdvID()"
 
-val rbClientAdvIdExtractorRegex = Regex("rb_adv_id=[\\w-]+")
+val rbAdvIdExtractorRegex = Regex("rb_adv_id=[\\w-]+")
 
 // Rockerbox advertiser id can contain alphanumeric, underscore: [a-zA-Z0-9_] and hyphen: [-]
-val rbClientAdvIdRegex = Regex("[\\w-]+")
+val rbAdvIdRegex = Regex("[\\w-]+")
 
 fun String.isRbAdvIdValid(): Boolean {
-    return this.matches(rbClientAdvIdRegex)
+    return this.matches(rbAdvIdRegex)
 }
 
 fun findRbAdvIdInString(str: String): String? {
-    val matchResult = rbClientAdvIdExtractorRegex.find(str) ?: return null
+    val matchResult = rbAdvIdExtractorRegex.find(str) ?: return null
     return matchResult.groupValues[0].split("=")[1]
 }
 
-fun String.isRbClientSpx(): Boolean {
-    return this.isRbClientAdvIdSpx() || this.isRbClientUidSpx()
+fun String.isSpxForRbClient(): Boolean {
+    return this.isSpxForRbClientAdvId() || this.isSpxForRbClientUid()
 }
 
-fun String.isRbClientAdvIdSpx(): Boolean {
-    return this.contains(rbClientAdvIdSpxFieldQueryKeyword)
+fun String.isSpxForRbClientAdvId(): Boolean {
+    return this.contains(keywordToFindSpxForRbClientAdvId)
 }
 
-fun String.isRbClientUidSpx(): Boolean {
-    return this.contains(rbClientUidSpxFieldQueryKeyword)
+fun String.isSpxForRbClientUid(): Boolean {
+    return this.contains(keywordToFindSpxForRbClientUid)
 }
 
-fun createRbClientAdvIdSpx(aid: Int, rbAdvId: String): AdvertiserSmartPxVariables {
+fun createSpxForRbClientAdvId(aid: Int, rbAdvId: String): AdvertiserSmartPxVariables {
     val spx = AdvertiserSmartPxVariables()
     spx.advertiserId = aid
-    spx.query = rbAdvId.createRbClientAdvIdSpxFieldQuery()
+    spx.query = rbAdvId.createFieldQueryOfSpxForRbClientAdvId()
     return spx
 }
 
-fun String.createRbClientAdvIdSpxFieldQuery(): String {
+fun String.createFieldQueryOfSpxForRbClientAdvId(): String {
     return """
         let getRockerBoxAdvID = () => { let rb_adv_id = null; return "rb_adv_id=$this"; }; getRockerBoxAdvID();
     """.trimIndent()
 }
 
-fun Int.createRbClientUidSpx(): AdvertiserSmartPxVariables {
+fun Int.createSpxForRbClientUid(): AdvertiserSmartPxVariables {
     val spx = AdvertiserSmartPxVariables()
     spx.advertiserId = this
-    spx.query = getRbClientUidSpxFieldQuery()
+    spx.query = getFieldQueryOfSpxForRbClientUid()
     return spx
 }
 
@@ -68,14 +68,14 @@ fun Int.createRbClientUidSpx(): AdvertiserSmartPxVariables {
  * };
  * getRockerBoxUID();
  */
-fun getRbClientUidSpxFieldQuery(): String {
-    return rbClientUidSpxFieldQueryPart1 + rbClientUidSpxFieldQueryPart2
+fun getFieldQueryOfSpxForRbClientUid(): String {
+    return fieldQueryOfSpxForRbClientUidPart1 + fieldQueryOfSpxForRbClientUidPart2
 }
 
-val rbClientUidSpxFieldQueryPart1 = """
+val fieldQueryOfSpxForRbClientUidPart1 = """
     let getRockerBoxUID = () => { let rb_uid = null; try{ rb_uid = `rb_uid=$
 """.trimIndent()
 
-val rbClientUidSpxFieldQueryPart2 = """
+val fieldQueryOfSpxForRbClientUidPart2 = """
     {document.cookie.split("rbuid=")[1].split(";")[0].trim()}`; }catch(e){ rb_uid = null }; return rb_uid }; getRockerBoxUID();	
 """.trimIndent()

@@ -2,7 +2,7 @@ package com.steelhouse.smartpixelconfigservice.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.steelhouse.smartpixelconfigservice.config.RbClientConfig
-import com.steelhouse.smartpixelconfigservice.service.RbClientSpxConfigService
+import com.steelhouse.smartpixelconfigservice.service.RbClientConfigService
 import com.steelhouse.smartpixelconfigservice.util.isRbAdvIdValid
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @ResponseBody
-class RbClientSpxConfigController(
-    private val rbClientSpxConfigService: RbClientSpxConfigService
+class RbClientConfigController(
+    private val rbClientConfigService: RbClientConfigService
 ) {
     private val log: Logger = LogManager.getLogger(this.javaClass)
 
@@ -32,7 +32,7 @@ class RbClientSpxConfigController(
         // This is a test endpoint for development purpose. The client does not need this endpoint.
         log.info("got request to get all the rb clients' advertiserId and rockerboxAdvertiserId")
 
-        val allRbClients = rbClientSpxConfigService.getRbClients() ?: return ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
+        val allRbClients = rbClientConfigService.getRbClients() ?: return ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
         return ResponseEntity.ok().body(ObjectMapper().writeValueAsString(allRbClients))
     }
 
@@ -53,15 +53,15 @@ class RbClientSpxConfigController(
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
 
-        val rbClientSpxMap = rbClientSpxConfigService.getRbClientSpxMapByAdvertiserId(advertiserId)
+        val rbClientSpxMap = rbClientConfigService.getRbClientSpxMapByAdvertiserId(advertiserId)
             ?: return ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
 
         return if (rbClientSpxMap.isEmpty()) {
-            val insertSucceed = rbClientSpxConfigService.insertRbClient(rbClientConfig)
+            val insertSucceed = rbClientConfigService.insertRbClient(rbClientConfig)
             log.info(logClientRequestResult(advertiserId, "insert", rbAdvId, insertSucceed))
             if (insertSucceed) ResponseEntity(HttpStatus.CREATED) else ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
         } else {
-            val updateSucceed = rbClientSpxConfigService.updateRbClient(rbClientConfig, rbClientSpxMap)
+            val updateSucceed = rbClientConfigService.updateRbClient(rbClientConfig, rbClientSpxMap)
             log.info(logClientRequestResult(advertiserId, "update", rbAdvId, updateSucceed))
             if (updateSucceed) ResponseEntity(HttpStatus.OK) else ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
         }
@@ -76,12 +76,12 @@ class RbClientSpxConfigController(
     ): ResponseEntity<String> {
         log.info("got request to delete rb client. advertiserId=[$advertiserId]")
 
-        val rbClientSpxMap = rbClientSpxConfigService.getRbClientSpxMapByAdvertiserId(advertiserId)
+        val rbClientSpxMap = rbClientConfigService.getRbClientSpxMapByAdvertiserId(advertiserId)
             ?: return ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
 
         if (rbClientSpxMap.isEmpty()) return ResponseEntity(HttpStatus.NO_CONTENT)
 
-        val deletionSucceed = rbClientSpxConfigService.deleteRbClient(advertiserId, rbClientSpxMap)
+        val deletionSucceed = rbClientConfigService.deleteRbClient(advertiserId, rbClientSpxMap)
         log.info(logClientRequestResult(advertiserId, "delete", "n/a", deletionSucceed))
         return if (deletionSucceed) ResponseEntity(HttpStatus.OK) else ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
     }
