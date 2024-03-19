@@ -16,7 +16,7 @@ class ShopifyConfigControllerTest {
     @Test
     fun `migrateConversionPixel returns exception message for db error`() {
         val exceptionMsg = "dummy exception message"
-        every { service.migrateConversionPixel(1) } answers { Status(false, exceptionMsg) }
+        every { service.migrateConversionPixel(1) } answers { Status(false, 0, exceptionMsg) }
         val response = controller.migrateConversionPixel(1)
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.statusCode)
         assertEquals(exceptionMsg, response.body)
@@ -26,7 +26,7 @@ class ShopifyConfigControllerTest {
     @Test
     fun `migrateConversionPixel returns status message from db transaction`() {
         val statusMsg = "dummy local message"
-        every { service.migrateConversionPixel(1) } answers { Status(true, statusMsg) }
+        every { service.migrateConversionPixel(1) } answers { Status(true, 0, statusMsg) }
         val response = controller.migrateConversionPixel(1)
         assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
         assertEquals(statusMsg, response.body)
@@ -35,7 +35,7 @@ class ShopifyConfigControllerTest {
 
     @Test
     fun `migrateConversionPixel happy path`() {
-        every { service.migrateConversionPixel(1) } answers { Status(true, null) }
+        every { service.migrateConversionPixel(1) } answers { Status(true, 0, null) }
         val response = controller.migrateConversionPixel(1)
         assertEquals(HttpStatus.OK, response.statusCode)
         assertEquals(null, response.body)

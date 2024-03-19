@@ -14,6 +14,12 @@ class DataService(
 ) {
     private val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
+    /**
+     * Updates multiple tables by list of queries and returns a Status object.
+     * - Status.isExecuted: indicates whether the update has been executed on database
+     * - Status.numOfRowsMatched: indicates number of rows matched for update
+     * - Status.message: describes the update
+     */
     @Transactional
     fun updateMultipleTables(queries: List<String>): Status {
         var totalRowsMatched = 0
@@ -27,18 +33,14 @@ class DataService(
             // Commit the transaction
             log.debug("total $totalRowsMatched rows matched")
             sqlCounter.labels("multiple_tables", "batch_update", "ok").inc()
-            return if (totalRowsMatched > 0) {
-                Status(true, null)
-            } else {
-                Status(true, "nothing to update")
-            }
+            return Status(true, totalRowsMatched, null)
         } catch (e: Exception) {
             // Rollback transaction if any update fails
             log.error("unknown db exception to batch update multiple tables. error message=[${e.message}]")
             sqlCounter.labels("multiple_tables", "batch_update", "error").inc()
-            return Status(false, e.message)
+            return Status(false, 0, e.message)
         }
     }
 }
 
-data class Status(val isSuccess: Boolean, val message: String?)
+data class Status(val isExecuted: Boolean, val numOfRowsMatched: Int, var message: String?)

@@ -35,9 +35,10 @@ class ShopifyConfigController(
         val updateStatus = shopifyConfigService.migrateConversionPixel(advertiserId)
         val statusMsg = updateStatus.message
 
-        return if (updateStatus.isSuccess) {
-            if (statusMsg == null) ResponseEntity(HttpStatus.OK)
-            else {
+        return if (updateStatus.isExecuted) {
+            if (statusMsg == null) {
+                ResponseEntity(HttpStatus.OK)
+            } else {
                 log.error("client request error: shopify conversion pixel migration-$statusMsg. advertiserId=[$advertiserId].")
                 ResponseEntity.badRequest().headers(responseHeaders).body(statusMsg)
             }

@@ -8,7 +8,9 @@ class ShopifyConfigService(
 ) {
     fun migrateConversionPixel(advertiserId: Int): Status {
         val queryList = createQueryListForMigration(advertiserId)
-        return dataService.updateMultipleTables(queryList)
+        var updateStatus = dataService.updateMultipleTables(queryList)
+        if (updateStatus.numOfRowsMatched == 0) updateStatus.message = "nothing to update"
+        return updateStatus
     }
 
     /**
