@@ -99,7 +99,7 @@ class Spx(
      *         null for db error. Further recovery is needed.
      */
     @Transactional
-    fun batchUpdateSPXsBySqlQueryAndReturnRows(list: List<AdvertiserSmartPxVariables>, sql: String): List<Map<String?, Any?>>? {
+    fun batchUpdateSpxListBySqlQueryAndReturnRows(list: List<AdvertiserSmartPxVariables>, sql: String): List<Map<String?, Any?>>? {
         val listSize = list.size
         val logString = getSpxListFieldQueryInfoString(list)
         val rows: List<Map<String?, Any?>>

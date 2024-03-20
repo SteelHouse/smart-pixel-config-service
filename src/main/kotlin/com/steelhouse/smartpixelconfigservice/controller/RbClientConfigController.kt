@@ -53,7 +53,7 @@ class RbClientConfigController(
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
 
-        val rbClientSpxMap = rbClientConfigService.getRbClientSpxMapByAdvertiserId(advertiserId)
+        val rbClientSpxMap = rbClientConfigService.getRbClientSpxMapFromSpxTableByAdvertiserId(advertiserId)
             ?: return ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
 
         return if (rbClientSpxMap.isEmpty()) {
@@ -76,7 +76,7 @@ class RbClientConfigController(
     ): ResponseEntity<String> {
         log.info("got request to delete rb client. advertiserId=[$advertiserId]")
 
-        val rbClientSpxMap = rbClientConfigService.getRbClientSpxMapByAdvertiserId(advertiserId)
+        val rbClientSpxMap = rbClientConfigService.getRbClientSpxMapFromSpxTableByAdvertiserId(advertiserId)
             ?: return ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
 
         if (rbClientSpxMap.isEmpty()) return ResponseEntity(HttpStatus.NO_CONTENT)

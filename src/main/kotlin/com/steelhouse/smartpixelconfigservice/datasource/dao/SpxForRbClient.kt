@@ -57,7 +57,7 @@ class SpxForRbClient(
      *         list of rows for successful db transaction.
      *         null for db error. Further recovery is needed.
      */
-    fun insertRbClientSPXsAndReturnRows(list: List<AdvertiserSmartPxVariables>): List<Map<String?, Any?>>? {
+    fun insertRbClientSpxListAndReturnRows(list: List<AdvertiserSmartPxVariables>): List<Map<String?, Any?>>? {
         // SQL query to insert a spx record with the advertiser_id and query as variables
         // trpx_call_parameter_defaults_id is always '34'
         // query_type is always '3'
@@ -68,6 +68,6 @@ class SpxForRbClient(
             (advertiser_id, trpx_call_parameter_defaults_id, query, query_type, active, regex, regex_replace, regex_replace_value, regex_replace_modifier, endpoint)
             VALUES(?, 34, ?, 3, true, null, null, null, null, 'spx');
         """.trimIndent()
-        return batchUpdateSPXsBySqlQueryAndReturnRows(list, sqlToInsertSpxAdvertiserIdAndQuery)
+        return batchUpdateSpxListBySqlQueryAndReturnRows(list, sqlToInsertSpxAdvertiserIdAndQuery)
     }
 }

@@ -146,32 +146,32 @@ class RbClientConfigServiceTest {
     }
 
     @Test
-    fun `getRbClientSpxInfoFromDbByAdvertiserId returns null or map`() {
+    fun `getRbClientSpxInfoFromSpxTableByAdvertiserId returns null or map`() {
         // Test null spx
         // Stub behavior for the mocked properties
         every { spx.getSpxListByAdvertiserId(any()) } answers { null }
         // Invoke the function and test
-        assertNull(service.getRbClientSpxInfoFromDbByAdvertiserId(0))
+        assertNull(service.getRbClientSpxInfoFromSpxTableByAdvertiserId(0))
 
         // Test empty list of spx
         // Stub behavior for the mocked properties
         every { spx.getSpxListByAdvertiserId(any()) } answers { emptyList() }
         // Invoke the function and test
-        assertEquals(emptyMap<String, AdvertiserSmartPxVariables>(), service.getRbClientSpxInfoFromDbByAdvertiserId(0))
+        assertEquals(emptyMap<String, AdvertiserSmartPxVariables>(), service.getRbClientSpxInfoFromSpxTableByAdvertiserId(0))
 
         // Test invalid spx
         // Stub behavior for the mocked properties
         assignDummyValuesToSPXs()
         every { spx.getSpxListByAdvertiserId(any()) } answers { listOfSpx }
         // Invoke the function and test
-        assertEquals(emptyMap<String, AdvertiserSmartPxVariables>(), service.getRbClientSpxInfoFromDbByAdvertiserId(0))
+        assertEquals(emptyMap<String, AdvertiserSmartPxVariables>(), service.getRbClientSpxInfoFromSpxTableByAdvertiserId(0))
 
         // Test valid spx
         // Stub behavior for the mocked properties
         assignValidQueryToSPXs()
         every { spx.getSpxListByAdvertiserId(any()) } answers { listOfSpx }
         // Invoke the function and test
-        assertEquals(mapOfSpx, service.getRbClientSpxInfoFromDbByAdvertiserId(0))
+        assertEquals(mapOfSpx, service.getRbClientSpxInfoFromSpxTableByAdvertiserId(0))
     }
 
     @Test
@@ -181,28 +181,28 @@ class RbClientConfigServiceTest {
 
         // Case: null from db
         every { spx.getRbClientsAdvIdSpxList() } answers { null }
-        assertFalse(service.isRbAdvIdUnique(config))
+        assertFalse(service.isRbAdvIdUniqueInSpxTable(config))
 
         // Case: empty list from db
         every { spx.getRbClientsAdvIdSpxList() } answers { emptyList() }
-        assertTrue(service.isRbAdvIdUnique(config))
+        assertTrue(service.isRbAdvIdUniqueInSpxTable(config))
 
         // Case: db spx has no rbAdvId in query
         dbSpx.variableId = 1
         dbSpx.advertiserId = 1
         dbSpx.query = ""
         every { spx.getRbClientsAdvIdSpxList() } answers { listOf(dbSpx) }
-        assertTrue(service.isRbAdvIdUnique(config))
+        assertTrue(service.isRbAdvIdUniqueInSpxTable(config))
 
         // Case: db spx has same advertiserId
         dbSpx.query = "\"rb_adv_id=test"
         every { spx.getRbClientsAdvIdSpxList() } answers { listOf(dbSpx) }
-        assertTrue(service.isRbAdvIdUnique(config))
+        assertTrue(service.isRbAdvIdUniqueInSpxTable(config))
 
         // Case: db spx has different advertiserId and same rbAdvId
         dbSpx.advertiserId = 2
         every { spx.getRbClientsAdvIdSpxList() } answers { listOf(dbSpx) }
-        assertFalse(service.isRbAdvIdUnique(config))
+        assertFalse(service.isRbAdvIdUniqueInSpxTable(config))
     }
 
     @Test
