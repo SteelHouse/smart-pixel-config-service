@@ -128,10 +128,20 @@ class RbClientConfigService(
         val rbAdvId = config.rbAdvId
         val rbClientAdvIdSpx = createSpxForRbClientAdvId(advertiserId, rbAdvId)
         val rbClientUidSpx = advertiserId.createSpxForRbClientUid()
-        val insertSucceed = spx.insertRbClientSPXs(listOf(rbClientAdvIdSpx, rbClientUidSpx))
-        if (insertSucceed == true || insertSucceed == false) return insertSucceed
-        removeProblematicRbClientSPXs(advertiserId)
-        return false
+
+        val insertedSPXsRows = spx.insertRbClientSPXsAndReturnRows(listOf(rbClientAdvIdSpx, rbClientUidSpx))
+        if (insertedSPXsRows == null) {
+            removeProblematicRbClientSPXs(advertiserId)
+            return false
+        }
+        if (insertedSPXsRows.isEmpty()) {
+            return false
+        } else {
+            val rbAdvIdSpx = insertedSPXsRows[0]
+            val rbUidSpx = insertedSPXsRows[1]
+            log.debug("rb_adv_id spx=[$rbAdvIdSpx];\nrb_uid spx=[$rbUidSpx]")
+            return true
+        }
     }
 
     /**
@@ -144,7 +154,7 @@ class RbClientConfigService(
         val inputRbAdvId = config.rbAdvId
         val advIdSpxListFromDB = spx.getRbClientsAdvIdSpxList() ?: return false
         if (advIdSpxListFromDB.isEmpty()) return true
-        advIdSpxListFromDB.forEach() { spx ->
+        advIdSpxListFromDB.forEach { spx ->
             val dbRbAdvId = retrieveRbAdvIdFromSpxFieldQuery(spx)
             if (dbRbAdvId != null) {
                 if (dbRbAdvId == inputRbAdvId) {

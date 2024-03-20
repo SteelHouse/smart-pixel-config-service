@@ -51,19 +51,23 @@ class SpxForRbClient(
     }
 
     /**
-     * Returns the status of Rockerbox client pixels creation.
+     * Returns the list of Rockerbox client advertiser_smart_px_variables rows created.
      *
-     * @return true for success
-     *         null for unknown db error, need further action to recover
-     *         false for unknown db exception
+     * @return empty list for unknown db exception. No recovery is needed.
+     *         list of rows for successful db transaction.
+     *         null for db error. Further recovery is needed.
      */
-    fun insertRbClientSPXs(list: List<AdvertiserSmartPxVariables>): Boolean? {
+    fun insertRbClientSPXsAndReturnRows(list: List<AdvertiserSmartPxVariables>): List<Map<String?, Any?>>? {
         // SQL query to insert a spx record with the advertiser_id and query as variables
+        // trpx_call_parameter_defaults_id is always '34'
+        // query_type is always '3'
+        // active is always 'true'
+        // endpoint is always 'spx'
         val sqlToInsertSpxAdvertiserIdAndQuery = """
             INSERT INTO advertiser_smart_px_variables
             (advertiser_id, trpx_call_parameter_defaults_id, query, query_type, active, regex, regex_replace, regex_replace_value, regex_replace_modifier, endpoint)
             VALUES(?, 34, ?, 3, true, null, null, null, null, 'spx');
         """.trimIndent()
-        return batchInsertSPXsBySqlQuery(list, sqlToInsertSpxAdvertiserIdAndQuery)
+        return batchUpdateSPXsBySqlQueryAndReturnRows(list, sqlToInsertSpxAdvertiserIdAndQuery)
     }
 }
