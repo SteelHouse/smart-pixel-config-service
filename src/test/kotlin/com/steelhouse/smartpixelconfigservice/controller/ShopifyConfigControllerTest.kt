@@ -1,7 +1,7 @@
 package com.steelhouse.smartpixelconfigservice.controller
 
 import com.steelhouse.smartpixelconfigservice.service.ShopifyConfigService
-import com.steelhouse.smartpixelconfigservice.service.Status
+import com.steelhouse.smartpixelconfigservice.datasource.Status
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals

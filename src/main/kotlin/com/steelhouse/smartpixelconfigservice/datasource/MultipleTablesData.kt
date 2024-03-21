@@ -1,4 +1,4 @@
-package com.steelhouse.smartpixelconfigservice.service
+package com.steelhouse.smartpixelconfigservice.datasource
 
 import io.prometheus.client.Counter
 import org.slf4j.Logger
@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
 @Component
-class DataService(
+class MultipleTablesData(
     private val sqlCounter: Counter,
     private val jdbcTemplate: JdbcTemplate
 ) {
