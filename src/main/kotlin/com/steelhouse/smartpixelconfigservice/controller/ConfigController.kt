@@ -38,7 +38,25 @@ class ConfigController(
         val trpxCallParameterDefaultsIdList = trpxCallParameterDefaultsId?.takeIf { validNumberPattern.matches(it) }
             ?.split(",")?.map { it.trim() }?.filter { it.isNotBlank() }
             ?: emptyList()
-        val result = configService.getAdvertiserSmartPxVariablesList(advertiserId, trpxCallParameterDefaultsIdList) ?: return ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
+        val result = configService.getAdvertiserSmartPxVariablesListByAdvertiserId(advertiserId, trpxCallParameterDefaultsIdList) ?: return ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
+        return ResponseEntity.ok().body(ObjectMapper().writeValueAsString(result))
+    }
+
+    @RequestMapping(
+        value = ["/advSpxVar"],
+        method = [RequestMethod.GET],
+        produces = [MediaType.APPLICATION_JSON_VALUE]
+    )
+    fun getSpxListByVariableId(
+        @RequestParam(name = "variableId", required = false) variableId: String?
+    ): ResponseEntity<String> {
+        // This is a test endpoint for development purpose. The client does not need this endpoint.
+        log.info("got request to get all the advertiser_smart_px_variables for variableId=[$variableId]")
+
+        val variableIdList = variableId?.takeIf { validNumberPattern.matches(it) }
+            ?.split(",")?.map { it.trim() }?.filter { it.isNotBlank() }
+            ?: emptyList()
+        val result = configService.getAdvertiserSmartPxVariablesListByVariableIds(variableIdList) ?: return ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
         return ResponseEntity.ok().body(ObjectMapper().writeValueAsString(result))
     }
 

@@ -151,6 +151,17 @@ class Spx(
         return rows
     }
 
+    fun getSpxListByVariableIds(variableIds: List<Int>): List<AdvertiserSmartPxVariables>? {
+        val ids = variableIds.joinToString()
+        return try {
+            spxRepository.findAllById(variableIds).toList()
+        } catch (e: Exception) {
+            log.error("unknown db exception to get data. variableIds=[$ids]; error message=[${e.message}]")
+            sqlCounter.labels("advertiser_smart_px_variables", "select", "error").inc()
+            null
+        }
+    }
+
     fun deleteSPXsByVariableIds(variableIds: List<Int>): Boolean {
         val ids = variableIds.joinToString()
         return try {

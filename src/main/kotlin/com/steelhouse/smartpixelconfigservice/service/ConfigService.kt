@@ -14,8 +14,12 @@ class ConfigService(
     private val spxConvVar: SpxConvVar,
     private val rbIntegration: RbIntegration
 ) {
-    fun getAdvertiserSmartPxVariablesList(advertiserId: Int, trpxCallParameterDefaultsIdList: List<String>): List<AdvertiserSmartPxVariables>? {
+    fun getAdvertiserSmartPxVariablesListByAdvertiserId(advertiserId: Int, trpxCallParameterDefaultsIdList: List<String>): List<AdvertiserSmartPxVariables>? {
         return spx.getSpxListByAdvertiserId(advertiserId, trpxCallParameterDefaultsIdList)
+    }
+
+    fun getAdvertiserSmartPxVariablesListByVariableIds(variableIdList: List<String>): List<AdvertiserSmartPxVariables>? {
+        return spx.getSpxListByVariableIds(variableIdList.map { it.toInt() })
     }
 
     fun getSpxConversionVariablesList(advertiserId: Int, variableIdList: List<String>): List<SpxConversionVariables>? {
