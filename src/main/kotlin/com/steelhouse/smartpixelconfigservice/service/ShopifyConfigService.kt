@@ -1,14 +1,16 @@
 package com.steelhouse.smartpixelconfigservice.service
 
+import com.steelhouse.smartpixelconfigservice.datasource.MultipleTablesData
+import com.steelhouse.smartpixelconfigservice.datasource.Status
 import org.springframework.stereotype.Component
 
 @Component
 class ShopifyConfigService(
-    private val dataService: DataService
+    private val multipleTablesData: MultipleTablesData
 ) {
     fun migrateConversionPixel(advertiserId: Int): Status {
         val queryList = createQueryListForMigration(advertiserId)
-        var updateStatus = dataService.updateMultipleTables(queryList)
+        var updateStatus = multipleTablesData.updateMultipleTables(queryList)
         if (updateStatus.numOfRowsMatched == 0) updateStatus.message = "nothing to update"
         return updateStatus
     }
