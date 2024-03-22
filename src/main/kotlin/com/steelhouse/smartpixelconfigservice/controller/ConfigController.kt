@@ -80,25 +80,12 @@ class ConfigController(
     }
 
     @RequestMapping(
-        value = ["/rbIntegration/advertisers"],
-        method = [RequestMethod.GET],
-        produces = [MediaType.APPLICATION_JSON_VALUE]
-    )
-    fun getRbIntegrationList(): ResponseEntity<String> {
-        // This is a test endpoint for development purpose. The client does not need this endpoint.
-        log.info("got request to get rockerbox_integration")
-
-        val result = configService.getRockerboxIntegrationList(null) ?: return ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
-        return ResponseEntity.ok().body(ObjectMapper().writeValueAsString(result))
-    }
-
-    @RequestMapping(
-        value = ["/rbIntegration/advertisers/{advertiserId}"],
+        value = ["/rbIntegration/advertisers", "/rbIntegration/advertisers/{advertiserId}"],
         method = [RequestMethod.GET],
         produces = [MediaType.APPLICATION_JSON_VALUE]
     )
     fun getRbIntegrationListByAdvertiser(
-        @PathVariable("advertiserId") advertiserId: Int
+        @PathVariable("advertiserId", required = false) advertiserId: Int?
     ): ResponseEntity<String> {
         // This is a test endpoint for development purpose. The client does not need this endpoint.
         log.info("got request to get rockerbox_integration for advertiserId=[$advertiserId]")

@@ -2,6 +2,8 @@ package com.steelhouse.smartpixelconfigservice.service
 
 import com.steelhouse.postgresql.publicschema.AdvertiserSmartPxVariables
 import com.steelhouse.smartpixelconfigservice.config.RbClientConfig
+import com.steelhouse.smartpixelconfigservice.datasource.RbClientData
+import com.steelhouse.smartpixelconfigservice.datasource.dao.RbIntegration
 import com.steelhouse.smartpixelconfigservice.datasource.dao.SpxForRbClient
 import com.steelhouse.smartpixelconfigservice.datasource.dao.rbClientAdvIdSpxTag
 import com.steelhouse.smartpixelconfigservice.datasource.dao.rbClientUidSpxTag
@@ -15,7 +17,9 @@ import org.junit.jupiter.api.Test
 
 class RbClientConfigServiceTest {
     private val spx = mockk<SpxForRbClient>()
-    private val service = RbClientConfigService(spx)
+    private val rbInt = mockk<RbIntegration>()
+    private val rbClientData = mockk<RbClientData>()
+    private val service = RbClientConfigService(spx, rbInt, rbClientData)
 
     private val advIdSpx = AdvertiserSmartPxVariables()
     private val uidSpx = AdvertiserSmartPxVariables()
@@ -175,7 +179,7 @@ class RbClientConfigServiceTest {
     }
 
     @Test
-    fun testIsRbAdvIdUnique() {
+    fun testIsRbAdvIdUniqueInSpxTable() {
         val config = RbClientConfig(advertiserId = 1, rbAdvId = "test")
         val dbSpx = AdvertiserSmartPxVariables()
 
@@ -233,12 +237,12 @@ class RbClientConfigServiceTest {
     }
 
     @Test
-    fun `deleteRbClient validates spx and returns early for error`() {
+    fun `deleteRbClientSPXs validates spx and returns early for error`() {
         // Case: advertiserId does not match
         assignDummyValuesToSPXs()
-        assertFalse(service.deleteRbClient(aidPlaceholder, mapOfSpx))
+        assertFalse(service.deleteRbClientSPXs(aidPlaceholder, mapOfSpx))
 
         // Case: spx is not rb client spx
-        assertFalse(service.deleteRbClient(aid, mapOfSpx))
+        assertFalse(service.deleteRbClientSPXs(aid, mapOfSpx))
     }
 }
