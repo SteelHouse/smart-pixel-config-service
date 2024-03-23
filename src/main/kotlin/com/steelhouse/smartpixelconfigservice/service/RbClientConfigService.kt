@@ -1,17 +1,16 @@
 package com.steelhouse.smartpixelconfigservice.service
 
 import com.steelhouse.postgresql.publicschema.AdvertiserSmartPxVariables
-import com.steelhouse.smartpixelconfigservice.config.RbClientConfig
 import com.steelhouse.smartpixelconfigservice.datasource.RbClientData
 import com.steelhouse.smartpixelconfigservice.datasource.dao.RbIntegration
-import com.steelhouse.smartpixelconfigservice.datasource.dao.SpxForRbClient
-import com.steelhouse.smartpixelconfigservice.datasource.dao.rbClientAdvIdSpxTag
-import com.steelhouse.smartpixelconfigservice.datasource.dao.rbClientUidSpxTag
+import com.steelhouse.smartpixelconfigservice.datasource.dao.Spx
+import com.steelhouse.smartpixelconfigservice.model.RbClientConfigRequest
 import com.steelhouse.smartpixelconfigservice.util.createSpxForRbClientAdvId
 import com.steelhouse.smartpixelconfigservice.util.createSpxForRbClientUid
 import com.steelhouse.smartpixelconfigservice.util.findRbAdvIdInString
 import com.steelhouse.smartpixelconfigservice.util.getSpxFieldQueryInfoString
 import com.steelhouse.smartpixelconfigservice.util.getSpxListFieldQueryInfoString
+import com.steelhouse.smartpixelconfigservice.util.isRbAdvIdValid
 import com.steelhouse.smartpixelconfigservice.util.isSpxForRbClient
 import com.steelhouse.smartpixelconfigservice.util.isSpxForRbClientAdvId
 import com.steelhouse.smartpixelconfigservice.util.isSpxForRbClientUid
@@ -19,20 +18,27 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
+const val rbClientUidSpxTag = "rbClientUidSpx"
+const val rbClientAdvIdSpxTag = "rbClientAdvIdSpx"
+
 @Component
 class RbClientConfigService(
-    private val spx: SpxForRbClient,
+    private val spx: Spx,
     private val rbIntegration: RbIntegration,
     private val rbClientData: RbClientData
 ) {
     private val log: Logger = LoggerFactory.getLogger(this.javaClass)
+
+    fun isRbAdvIdValid(id: String): Boolean {
+        return id.isRbAdvIdValid()
+    }
 
     /**
      * Returns a list of all the Rockerbox client's mntn advertiserId or null if there are errors.
      * The list is retrieved from the getRockerBoxUID spx list from advertiser_smart_px_variables table.
      */
     fun getRbClientsAdvertiserIdListFromUidSpx(): MutableList<Int>? {
-        val rbClientsUidSpxList = spx.getRbClientsUidSpxList() ?: return null
+        val rbClientsUidSpxList = rbClientData.getRbClientsUidSpxList() ?: return null
         val list = mutableListOf<Int>()
         rbClientsUidSpxList.forEach { spx -> list.add(spx.advertiserId) }
         return list
@@ -40,11 +46,11 @@ class RbClientConfigService(
 
     /**
      * Returns a map of all the Rockerbox client's mntn advertiserId -> rbAdvertiserId or null if there are errors.
-     * It is guaranteed that the advertiser in the map are valid as having two Rockerbox related smart pixels
+     * It is guaranteed that the advertiser(s) in the map is(are) valid as having two Rockerbox related smart pixels
      * from advertiser_smart_px_variables table.
      */
     fun getRbClients(): Map<Int, String>? {
-        val rbClientAdvIdSpxList = spx.getRbClientsAdvIdSpxList() ?: return null
+        val rbClientAdvIdSpxList = rbClientData.getRbClientsAdvIdSpxList() ?: return null
         val rbClientAdvertiserIdListFromUidSpx = getRbClientsAdvertiserIdListFromUidSpx() ?: return null
         return getValidRbClientInfoMap(rbClientAdvIdSpxList, rbClientAdvertiserIdListFromUidSpx)
     }
@@ -108,20 +114,6 @@ class RbClientConfigService(
 
     /**
      * Returns a map of Rockerbox client related smart pixels by mntn advertiserId or null if there are errors.
-     * The map is guaranteed to be in the following format and have two key-value pairs.
-     * {
-     *      "rbClientAdvIdSpx" --> <getRockerBoxAdvID spx>,
-     *      "rbClientUidSpx"   --> <getRockerBoxUID spx>
-     * }
-     * The map is retrieved from advertiser_smart_px_variables table.
-     */
-    fun getRbClientSpxMapFromSpxTableByAdvertiserId(advertiserId: Int): Map<String, AdvertiserSmartPxVariables>? {
-        val map = getRbClientSpxInfoFromSpxTableByAdvertiserId(advertiserId) ?: return null
-        return if (doesRbClientHaveValidSPXs(map)) map else null
-    }
-
-    /**
-     * Returns a map of Rockerbox client related smart pixels by mntn advertiserId or null if there are errors.
      * The map is in the following format but there is NO guarantee that the map contains both Rockerbox client smart pixels.
      * {
      *      <rb_spx_type> --> <spx>
@@ -163,7 +155,7 @@ class RbClientConfigService(
      * Creates a new Rockerbox client, and returns a boolean flag indicating the status of action.
      * If there are errors during the creation process, remove the problematic spx if possible and return false.
      */
-    fun insertRbClient(config: RbClientConfig): Boolean {
+    fun insertRbClient(config: RbClientConfigRequest): Boolean {
         log.debug("need to create a new rb client")
 
         // Double-check whether the rbAdvId is unique
@@ -174,20 +166,17 @@ class RbClientConfigService(
         // Insert 2 rows into advertiser_smart_px_variables table
         val rbClientAdvIdSpx = createSpxForRbClientAdvId(advertiserId, rbAdvId)
         val rbClientUidSpx = advertiserId.createSpxForRbClientUid()
-        val insertedSpxRows = spx.insertRbClientSpxListAndReturnRows(listOf(rbClientAdvIdSpx, rbClientUidSpx))
+        val insertedSpxRows = rbClientData.insertRbClientSpxListAndReturnRows(listOf(rbClientAdvIdSpx, rbClientUidSpx))
         if (insertedSpxRows == null) {
             removeProblematicRbClientSPXsByAdvertiserId(advertiserId)
             return false
         }
+        if (insertedSpxRows.isEmpty()) return false
 
         // Insert 1 row into rockerbox_integration table
-        return if (insertedSpxRows.isEmpty()) {
-            false
-        } else {
-            val rbAdvIdSpxVariableId = insertedSpxRows[0]["variable_id"] as? Int
-            val rbUidSpxVariableId = insertedSpxRows[1]["variable_id"] as? Int
-            insertRbIntegration(advertiserId, rbAdvId, rbAdvIdSpxVariableId, rbUidSpxVariableId)
-        }
+        val rbAdvIdSpxVariableId = insertedSpxRows[0]["variable_id"] as? Int
+        val rbUidSpxVariableId = insertedSpxRows[1]["variable_id"] as? Int
+        return insertRbIntegration(advertiserId, rbAdvId, rbAdvIdSpxVariableId, rbUidSpxVariableId)
     }
 
     fun insertRbIntegration(advertiserId: Int, rbAdvId: String, rbAdvIdSpxVariableId: Int?, rbUidSpxVariableId: Int?): Boolean {
@@ -195,7 +184,7 @@ class RbClientConfigService(
             removeProblematicRbClientSPXsByAdvertiserId(advertiserId)
             return false
         }
-        val insertRbIntegrationSucceed = rbIntegration.insertRbIntegration(advertiserId, rbAdvId, rbAdvIdSpxVariableId, rbUidSpxVariableId)
+        val insertRbIntegrationSucceed = rbIntegration.saveRbIntegration(advertiserId, rbAdvId, rbAdvIdSpxVariableId, rbUidSpxVariableId)
         return if (insertRbIntegrationSucceed) {
             true
         } else {
@@ -205,7 +194,7 @@ class RbClientConfigService(
     }
 
     /**
-     * Returns whether the Rockerbox Advertiser ID is unique in advertiser_smart_px_variables table.
+     * Returns whether the Rockerbox Advertiser ID is unique.
      * This is a safe net because the client should have done the uniqueness validation on their end.
      * However, if the input value is ever not unique, we will mess up the data and there is no way to recover.
      */
@@ -223,10 +212,10 @@ class RbClientConfigService(
      * This is a safe net because the client should have done the uniqueness validation on their end.
      * However, if the input value is ever not unique, we will mess up the data and there is no way to recover.
      */
-    fun isRbAdvIdUniqueInSpxTable(config: RbClientConfig): Boolean {
+    fun isRbAdvIdUniqueInSpxTable(config: RbClientConfigRequest): Boolean {
         val inputAdvertiserId = config.advertiserId
         val inputRbAdvId = config.rbAdvId
-        val advIdSpxListFromSpxTable = spx.getRbClientsAdvIdSpxList() ?: return false
+        val advIdSpxListFromSpxTable = rbClientData.getRbClientsAdvIdSpxList() ?: return false
         if (advIdSpxListFromSpxTable.isEmpty()) return true
         advIdSpxListFromSpxTable.forEach { spx ->
             val dbRbAdvId = retrieveRbAdvIdFromSpxFieldQuery(spx)
@@ -258,7 +247,7 @@ class RbClientConfigService(
      * Updates the Rockerbox client's getRockerBoxAdvID spx with new Rockerbox advertiserId if applicable,
      * and returns a boolean flag indicating the status of action.
      */
-    fun updateRbClient(newConfig: RbClientConfig, map: Map<String, AdvertiserSmartPxVariables>): Boolean {
+    fun updateRbClient(newConfig: RbClientConfigRequest, map: Map<String, AdvertiserSmartPxVariables>): Boolean {
         val advertiserId = newConfig.advertiserId
 
         // Validate the Rockerbox client's getRockerBoxAdvID spx

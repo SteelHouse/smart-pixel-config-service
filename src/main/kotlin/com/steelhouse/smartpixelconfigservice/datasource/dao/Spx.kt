@@ -70,27 +70,6 @@ class Spx(
         return null
     }
 
-    fun updateSpxFieldQuery(variableId: Int, query: String): Boolean {
-        val sqlQuery = createSqlQueryToUpdateSpxFieldQueryByVariableId(variableId, query)
-        return try {
-            jdbcTemplate.update(sqlQuery)
-            sqlCounter.labels("advertiser_smart_px_variables", "update", "ok").inc()
-            true
-        } catch (e: Exception) {
-            log.error("unknown db exception to update data. sql=[$sqlQuery]; error message=[${e.message}]")
-            sqlCounter.labels("advertiser_smart_px_variables", "update", "error").inc()
-            false
-        }
-    }
-
-    private fun createSqlQueryToUpdateSpxFieldQueryByVariableId(variableId: Int, query: String): String {
-        return """
-           UPDATE advertiser_smart_px_variables
-           SET query = '$query'
-           WHERE variable_id = '$variableId'
-        """.trimIndent()
-    }
-
     /**
      * Returns the rows of advertiser_smart_px_variables updated.
      *
@@ -98,7 +77,6 @@ class Spx(
      *         list of rows for successful db transaction.
      *         null for db error. Further recovery is needed.
      */
-    @Transactional
     fun batchUpdateSpxListBySqlQueryAndReturnRows(list: List<AdvertiserSmartPxVariables>, sql: String): List<Map<String?, Any?>>? {
         val listSize = list.size
         val logString = getSpxListFieldQueryInfoString(list)
@@ -131,6 +109,7 @@ class Spx(
      * - query
      *
      */
+    @Transactional
     fun batchUpdateBySqlQueryAndReturnRows(list: List<AdvertiserSmartPxVariables>, sql: String): List<Map<String?, Any?>> {
         val rows = mutableListOf<Map<String?, Any?>>()
         for (spx in list) {

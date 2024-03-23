@@ -1,9 +1,8 @@
 package com.steelhouse.smartpixelconfigservice.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.steelhouse.smartpixelconfigservice.config.RbClientConfig
+import com.steelhouse.smartpixelconfigservice.model.RbClientConfigRequest
 import com.steelhouse.smartpixelconfigservice.service.RbClientConfigService
-import com.steelhouse.smartpixelconfigservice.util.isRbAdvIdValid
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.springframework.http.HttpStatus
@@ -42,14 +41,14 @@ class RbClientConfigController(
     )
     fun upsertRockerboxClient(
         @PathVariable("advertiserId") advertiserIdInPath: Int,
-        @RequestBody rbClientConfig: RbClientConfig
+        @RequestBody rbClientConfigRequest: RbClientConfigRequest
     ): ResponseEntity<String> {
-        val advertiserId = rbClientConfig.advertiserId
-        val rbAdvId = rbClientConfig.rbAdvId
+        val advertiserId = rbClientConfigRequest.advertiserId
+        val rbAdvId = rbClientConfigRequest.rbAdvId
         log.info("got request to upsert rb client. advertiser=[$advertiserId]; rbAdvId=[$rbAdvId]")
 
-        if (advertiserId != advertiserIdInPath || !rbAdvId.isRbAdvIdValid()) {
-            log.debug("advertiserId match? [${advertiserId == advertiserIdInPath}]; rbAdvId is valid? [${rbAdvId.isRbAdvIdValid()}]")
+        if (advertiserId != advertiserIdInPath || !rbClientConfigService.isRbAdvIdValid(rbAdvId)) {
+            log.debug("advertiserId=[$advertiserId] does not match advertiserIdInPath=[$advertiserIdInPath] or rbAdvId=[$rbAdvId] is not valid")
             return ResponseEntity(HttpStatus.BAD_REQUEST)
         }
 
@@ -57,11 +56,11 @@ class RbClientConfigController(
             ?: return ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
 
         return if (rbClientSpxMap.isEmpty()) {
-            val insertSucceed = rbClientConfigService.insertRbClient(rbClientConfig)
+            val insertSucceed = rbClientConfigService.insertRbClient(rbClientConfigRequest)
             log.info(logClientRequestResult(advertiserId, "insert", rbAdvId, insertSucceed))
             if (insertSucceed) ResponseEntity(HttpStatus.CREATED) else ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
         } else {
-            val updateSucceed = rbClientConfigService.updateRbClient(rbClientConfig, rbClientSpxMap)
+            val updateSucceed = rbClientConfigService.updateRbClient(rbClientConfigRequest, rbClientSpxMap)
             log.info(logClientRequestResult(advertiserId, "update", rbAdvId, updateSucceed))
             if (updateSucceed) ResponseEntity(HttpStatus.OK) else ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR)
         }

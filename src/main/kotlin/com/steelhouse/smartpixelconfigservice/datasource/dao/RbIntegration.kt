@@ -30,7 +30,7 @@ class RbIntegration(
         }
     }
 
-    fun insertRbIntegration(aid: Int, rbAdvId: String, rbAdvIdSpxVariableId: Int, rbUidSpxVariableId: Int): Boolean {
+    fun saveRbIntegration(aid: Int, rbAdvId: String, rbAdvIdSpxVariableId: Int, rbUidSpxVariableId: Int): Boolean {
         val newIntegration = RockerboxIntegration()
         newIntegration.advertiserId = aid
         newIntegration.rbAdvId = rbAdvId

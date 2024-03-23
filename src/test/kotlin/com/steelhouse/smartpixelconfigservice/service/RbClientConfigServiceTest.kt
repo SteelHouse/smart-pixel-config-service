@@ -1,12 +1,10 @@
 package com.steelhouse.smartpixelconfigservice.service
 
 import com.steelhouse.postgresql.publicschema.AdvertiserSmartPxVariables
-import com.steelhouse.smartpixelconfigservice.config.RbClientConfig
 import com.steelhouse.smartpixelconfigservice.datasource.RbClientData
 import com.steelhouse.smartpixelconfigservice.datasource.dao.RbIntegration
-import com.steelhouse.smartpixelconfigservice.datasource.dao.SpxForRbClient
-import com.steelhouse.smartpixelconfigservice.datasource.dao.rbClientAdvIdSpxTag
-import com.steelhouse.smartpixelconfigservice.datasource.dao.rbClientUidSpxTag
+import com.steelhouse.smartpixelconfigservice.datasource.dao.Spx
+import com.steelhouse.smartpixelconfigservice.model.RbClientConfigRequest
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -16,7 +14,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class RbClientConfigServiceTest {
-    private val spx = mockk<SpxForRbClient>()
+    private val spx = mockk<Spx>()
     private val rbInt = mockk<RbIntegration>()
     private val rbClientData = mockk<RbClientData>()
     private val service = RbClientConfigService(spx, rbInt, rbClientData)
@@ -49,7 +47,7 @@ class RbClientConfigServiceTest {
     fun `getClientsAdvertiserIdListFromUidSpx does not validate spx`() {
         // Test null value
         // Stub behavior for the mocked properties
-        every { spx.getRbClientsUidSpxList() } answers { null }
+        every { rbClientData.getRbClientsUidSpxList() } answers { null }
         // Invoke the function and test
         assertNull(service.getRbClientsAdvertiserIdListFromUidSpx())
 
@@ -57,7 +55,7 @@ class RbClientConfigServiceTest {
         // Prepare data
         assignDummyValuesToSPXs()
         // Stub behavior for the mocked properties
-        every { spx.getRbClientsUidSpxList() } answers { listOfSpx }
+        every { rbClientData.getRbClientsUidSpxList() } answers { listOfSpx }
         // Invoke the function and test
         assertEquals(listOf(aid, aid), service.getRbClientsAdvertiserIdListFromUidSpx())
 
@@ -65,7 +63,7 @@ class RbClientConfigServiceTest {
         // Prepare data
         assignValidQueryToSPXs()
         // Stub behavior for the mocked properties
-        every { spx.getRbClientsUidSpxList() } answers { listOfSpx }
+        every { rbClientData.getRbClientsUidSpxList() } answers { listOfSpx }
         // Invoke the function and test
         assertEquals(listOf(aid, aid), service.getRbClientsAdvertiserIdListFromUidSpx())
     }
@@ -73,21 +71,21 @@ class RbClientConfigServiceTest {
     @Test
     fun `getClients validates spx`() {
         // Test null value
-        every { spx.getRbClientsAdvIdSpxList() } answers { null }
-        every { spx.getRbClientsUidSpxList() } answers { listOf(uidSpx) }
+        every { rbClientData.getRbClientsAdvIdSpxList() } answers { null }
+        every { rbClientData.getRbClientsUidSpxList() } answers { listOf(uidSpx) }
         assertNull(service.getRbClients())
 
         // Test null value
-        every { spx.getRbClientsAdvIdSpxList() } answers { listOf(advIdSpx) }
-        every { spx.getRbClientsUidSpxList() } answers { null }
+        every { rbClientData.getRbClientsAdvIdSpxList() } answers { listOf(advIdSpx) }
+        every { rbClientData.getRbClientsUidSpxList() } answers { null }
         assertNull(service.getRbClients())
 
         // Test dummy values
         // Prepare data
         assignDummyValuesToSPXs()
         // Stub behavior for the mocked properties
-        every { spx.getRbClientsAdvIdSpxList() } answers { listOf(advIdSpx) }
-        every { spx.getRbClientsUidSpxList() } answers { listOf(uidSpx) }
+        every { rbClientData.getRbClientsAdvIdSpxList() } answers { listOf(advIdSpx) }
+        every { rbClientData.getRbClientsUidSpxList() } answers { listOf(uidSpx) }
         // Invoke the function and test
         assertEquals(emptyMap<Int, String>(), service.getRbClients())
 
@@ -95,8 +93,8 @@ class RbClientConfigServiceTest {
         // Prepare data
         assignValidQueryToSPXs()
         // Stub behavior for the mocked properties
-        every { spx.getRbClientsAdvIdSpxList() } answers { listOf(advIdSpx) }
-        every { spx.getRbClientsUidSpxList() } answers { listOf(uidSpx) }
+        every { rbClientData.getRbClientsAdvIdSpxList() } answers { listOf(advIdSpx) }
+        every { rbClientData.getRbClientsUidSpxList() } answers { listOf(uidSpx) }
         // Invoke the function and test
         assertEquals(mapOf(aid to rbAdvId), service.getRbClients())
     }
@@ -112,8 +110,8 @@ class RbClientConfigServiceTest {
         // Prepare data
         dummySpx.query = validAdvIdSpxQuery
         // Stub behavior for the mocked properties
-        every { spx.getRbClientsAdvIdSpxList() } answers { listOf(advIdSpx, dummySpx) }
-        every { spx.getRbClientsUidSpxList() } answers { listOf(uidSpx) }
+        every { rbClientData.getRbClientsAdvIdSpxList() } answers { listOf(advIdSpx, dummySpx) }
+        every { rbClientData.getRbClientsUidSpxList() } answers { listOf(uidSpx) }
         // Invoke the function and test
         assertEquals(mapOf(aid to rbAdvId), service.getRbClients())
 
@@ -121,8 +119,8 @@ class RbClientConfigServiceTest {
         // Prepare data
         dummySpx.query = validUidSpxQuery
         // Stub behavior for the mocked properties
-        every { spx.getRbClientsAdvIdSpxList() } answers { listOf(advIdSpx) }
-        every { spx.getRbClientsUidSpxList() } answers { listOf(uidSpx, dummySpx) }
+        every { rbClientData.getRbClientsAdvIdSpxList() } answers { listOf(advIdSpx) }
+        every { rbClientData.getRbClientsUidSpxList() } answers { listOf(uidSpx, dummySpx) }
         // Invoke the function and test
         assertEquals(mapOf(aid to rbAdvId), service.getRbClients())
     }
@@ -180,38 +178,38 @@ class RbClientConfigServiceTest {
 
     @Test
     fun testIsRbAdvIdUniqueInSpxTable() {
-        val config = RbClientConfig(advertiserId = 1, rbAdvId = "test")
+        val config = RbClientConfigRequest(advertiserId = 1, rbAdvId = "test")
         val dbSpx = AdvertiserSmartPxVariables()
 
         // Case: null from db
-        every { spx.getRbClientsAdvIdSpxList() } answers { null }
+        every { rbClientData.getRbClientsAdvIdSpxList() } answers { null }
         assertFalse(service.isRbAdvIdUniqueInSpxTable(config))
 
         // Case: empty list from db
-        every { spx.getRbClientsAdvIdSpxList() } answers { emptyList() }
+        every { rbClientData.getRbClientsAdvIdSpxList() } answers { emptyList() }
         assertTrue(service.isRbAdvIdUniqueInSpxTable(config))
 
         // Case: db spx has no rbAdvId in query
         dbSpx.variableId = 1
         dbSpx.advertiserId = 1
         dbSpx.query = ""
-        every { spx.getRbClientsAdvIdSpxList() } answers { listOf(dbSpx) }
+        every { rbClientData.getRbClientsAdvIdSpxList() } answers { listOf(dbSpx) }
         assertTrue(service.isRbAdvIdUniqueInSpxTable(config))
 
         // Case: db spx has same advertiserId
         dbSpx.query = "\"rb_adv_id=test"
-        every { spx.getRbClientsAdvIdSpxList() } answers { listOf(dbSpx) }
+        every { rbClientData.getRbClientsAdvIdSpxList() } answers { listOf(dbSpx) }
         assertTrue(service.isRbAdvIdUniqueInSpxTable(config))
 
         // Case: db spx has different advertiserId and same rbAdvId
         dbSpx.advertiserId = 2
-        every { spx.getRbClientsAdvIdSpxList() } answers { listOf(dbSpx) }
+        every { rbClientData.getRbClientsAdvIdSpxList() } answers { listOf(dbSpx) }
         assertFalse(service.isRbAdvIdUniqueInSpxTable(config))
     }
 
     @Test
     fun `updateRbClient validates spx and returns early if no update is needed`() {
-        val config = RbClientConfig(advertiserId = aidPlaceholder, rbAdvId = rbAdvId)
+        val config = RbClientConfigRequest(advertiserId = aidPlaceholder, rbAdvId = rbAdvId)
 
         // Case: map is empty
         assertFalse(service.updateRbClient(config, emptyMap()))
