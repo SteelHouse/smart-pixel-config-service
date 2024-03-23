@@ -13,19 +13,26 @@ class ShopifyConfigServiceTest {
 
     @Test
     fun `migrateConversionPixel checks number of rows matched in db`() {
-        // Case: validates number of rows
+        // Case: validates number of rows for successful update
         every { multipleTablesData.updateMultipleTables(shopifyConfigService.createQueryListForMigration(1)) } answers { Status(true, 0, "dummy message") }
         var status = shopifyConfigService.migrateConversionPixel(1)
         assertEquals(status.isExecuted, true)
         assertEquals(status.numOfRowsMatched, 0)
         assertEquals(status.message, "nothing to update")
 
-        // Case: passes exception message from db error
-        every { multipleTablesData.updateMultipleTables(shopifyConfigService.createQueryListForMigration(1)) } answers { Status(false, 100, "dummy message") }
+        // Case: passes exception message from db error for failed db update
+        every { multipleTablesData.updateMultipleTables(shopifyConfigService.createQueryListForMigration(1)) } answers { Status(false, 100, "exception message") }
         status = shopifyConfigService.migrateConversionPixel(1)
         assertEquals(status.isExecuted, false)
         assertEquals(status.numOfRowsMatched, 100)
-        assertEquals(status.message, "dummy message")
+        assertEquals(status.message, "exception message")
+
+        // Case: does not overwrite exception message for failed db update
+        every { multipleTablesData.updateMultipleTables(shopifyConfigService.createQueryListForMigration(1)) } answers { Status(false, 0, "exception message") }
+        status = shopifyConfigService.migrateConversionPixel(1)
+        assertEquals(status.isExecuted, false)
+        assertEquals(status.numOfRowsMatched, 0)
+        assertEquals(status.message, "exception message")
 
         // Case: happy path
         every { multipleTablesData.updateMultipleTables(shopifyConfigService.createQueryListForMigration(1)) } answers { Status(true, 100, null) }
