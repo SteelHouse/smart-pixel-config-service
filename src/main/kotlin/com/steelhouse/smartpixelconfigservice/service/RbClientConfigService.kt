@@ -128,7 +128,7 @@ class RbClientConfigService(
     /**
      * Returns a map of Rockerbox client related spx-tag and corresponding spx.
      */
-    fun matchSpxWithRbClientTag(spxList: List<AdvertiserSmartPxVariables>): Map<String, AdvertiserSmartPxVariables> {
+    private fun matchSpxWithRbClientTag(spxList: List<AdvertiserSmartPxVariables>): Map<String, AdvertiserSmartPxVariables> {
         if (spxList.isEmpty()) return emptyMap()
         val map = mutableMapOf<String, AdvertiserSmartPxVariables>()
         spxList.forEach { spx ->
@@ -179,7 +179,7 @@ class RbClientConfigService(
         return insertRbIntegration(advertiserId, rbAdvId, rbAdvIdSpxVariableId, rbUidSpxVariableId)
     }
 
-    fun insertRbIntegration(advertiserId: Int, rbAdvId: String, rbAdvIdSpxVariableId: Int?, rbUidSpxVariableId: Int?): Boolean {
+    private fun insertRbIntegration(advertiserId: Int, rbAdvId: String, rbAdvIdSpxVariableId: Int?, rbUidSpxVariableId: Int?): Boolean {
         if (rbAdvIdSpxVariableId == null || rbUidSpxVariableId == null) {
             removeProblematicRbClientSPXsByAdvertiserId(advertiserId)
             return false
@@ -198,7 +198,7 @@ class RbClientConfigService(
      * This is a safe net because the client should have done the uniqueness validation on their end.
      * However, if the input value is ever not unique, we will mess up the data and there is no way to recover.
      */
-    fun isRbAdvIdUnique(inputRbAdvId: String): Boolean {
+    private fun isRbAdvIdUnique(inputRbAdvId: String): Boolean {
         val existingRbAdvIds = rbIntegration.getAllRbAdvIds() ?: return false
         val isIdUnique = !existingRbAdvIds.contains(inputRbAdvId)
         if (!isIdUnique) {

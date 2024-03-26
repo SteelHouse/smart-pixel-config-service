@@ -27,11 +27,11 @@ class MultipleTablesData(
             // Execute updates on multiple tables within a transaction
             for (query in queries) {
                 val rowsMatched = jdbcTemplate.update(query)
-                log.debug("$rowsMatched rows matched for sql=[\n$query\n]")
+                log.debug("$rowsMatched row(s) matched for sql=[\n$query\n]")
                 totalRowsMatched += rowsMatched
             }
             // Commit the transaction
-            log.debug("total $totalRowsMatched rows matched")
+            log.debug("total $totalRowsMatched row(s) matched")
             sqlCounter.labels("multiple_tables", "batch_update", "ok").inc()
             return Status(true, totalRowsMatched, null)
         } catch (e: Exception) {

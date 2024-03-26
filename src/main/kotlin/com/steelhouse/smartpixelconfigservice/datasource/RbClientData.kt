@@ -5,6 +5,7 @@ import com.steelhouse.smartpixelconfigservice.datasource.dao.Spx
 import com.steelhouse.smartpixelconfigservice.datasource.repository.RbIntegrationRepository
 import com.steelhouse.smartpixelconfigservice.datasource.repository.SpxRepository
 import com.steelhouse.smartpixelconfigservice.util.createFieldQueryOfSpxForRbClientAdvId
+import com.steelhouse.smartpixelconfigservice.util.getSpxListFieldQueryInfoString
 import com.steelhouse.smartpixelconfigservice.util.keywordToFindSpxForRbClientAdvId
 import com.steelhouse.smartpixelconfigservice.util.keywordToFindSpxForRbClientUid
 import io.prometheus.client.Counter
@@ -99,6 +100,25 @@ class RbClientData(
             (advertiser_id, trpx_call_parameter_defaults_id, query, query_type, active, regex, regex_replace, regex_replace_value, regex_replace_modifier, endpoint)
             VALUES(?, 34, ?, 3, true, null, null, null, null, 'spx');
         """.trimIndent()
-        return spx.batchUpdateSpxListBySqlQueryAndReturnRows(list, sqlToInsertSpxAdvertiserIdAndQuery)
+        val listSize = list.size
+        val logString = getSpxListFieldQueryInfoString(list)
+        val rows: List<Map<String?, Any?>>
+        try {
+            rows = spx.batchUpdateBySqlQueryAndReturnRows(list, sqlToInsertSpxAdvertiserIdAndQuery)
+        } catch (e: Exception) {
+            log.error("unknown db exception to batch update. error message=[${e.message}]; $logString")
+            sqlCounter.labels("advertiser_smart_px_variables", "batch_update", "error").inc()
+            return emptyList()
+        }
+        val resultSize = rows.size
+        return if (rows.size == listSize) {
+            log.debug("$resultSize spx have been created")
+            sqlCounter.labels("advertiser_smart_px_variables", "batch_update", "ok").inc()
+            rows
+        } else {
+            log.error("problems with db batch update: recovery needed. returned result=[$resultSize]; $logString")
+            sqlCounter.labels("advertiser_smart_px_variables", "batch_update", "error").inc()
+            null
+        }
     }
 }

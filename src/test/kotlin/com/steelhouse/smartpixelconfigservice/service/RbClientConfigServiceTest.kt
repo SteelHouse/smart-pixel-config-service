@@ -1,6 +1,7 @@
 package com.steelhouse.smartpixelconfigservice.service
 
 import com.steelhouse.postgresql.publicschema.AdvertiserSmartPxVariables
+import com.steelhouse.postgresql.publicschema.RockerboxIntegration
 import com.steelhouse.smartpixelconfigservice.datasource.RbClientData
 import com.steelhouse.smartpixelconfigservice.datasource.dao.RbIntegration
 import com.steelhouse.smartpixelconfigservice.datasource.dao.Spx
@@ -42,6 +43,8 @@ class RbClientConfigServiceTest {
         advIdSpx.query = validAdvIdSpxQuery
         uidSpx.query = validUidSpxQuery
     }
+
+    private val rockerboxIntegration = RockerboxIntegration()
 
     @Test
     fun `getClientsAdvertiserIdListFromUidSpx does not validate spx`() {
@@ -145,6 +148,63 @@ class RbClientConfigServiceTest {
         list.add(dummySpx.advertiserId)
         // Error message should be like "wrong rb client found in db: advertiser has getRockerBoxAdvID spx but no getRockerBoxUID spx. advertiserId=[123]"
         assertEquals(mapOf(dummySpx.advertiserId to rbAdvId), service.getValidRbClientInfoMap(listOf(advIdSpx, dummySpx), list))
+    }
+
+    @Test
+    fun `getRbClientSpxMapByAdvertiserId returns null or empty map if rockerbox_integration is not retrieved correctly`() {
+        // Test null rockerbox_integration
+        // Stub behavior for the mocked properties
+        every { rbInt.getRbIntegrationListByAdvertiserId(any()) } answers { null }
+        // Invoke the function and test
+        assertNull(service.getRbClientSpxMapByAdvertiserId(0))
+
+        // Test empty list of rockerbox_integration
+        // Stub behavior for the mocked properties
+        every { rbInt.getRbIntegrationListByAdvertiserId(any()) } answers { emptyList() }
+        // Invoke the function and test
+        assertEquals(emptyMap<String, AdvertiserSmartPxVariables>(), service.getRbClientSpxMapByAdvertiserId(0))
+
+        // Test invalid list of rockerbox_integration
+        // Stub behavior for the mocked properties
+        every { rbInt.getRbIntegrationListByAdvertiserId(any()) } answers { listOf(rockerboxIntegration, rockerboxIntegration) }
+        // Invoke the function and test
+        assertNull(service.getRbClientSpxMapByAdvertiserId(0))
+    }
+
+    @Test
+    fun `getRbClientSpxMapByAdvertiserId returns null if advertiser_smart_px_variables is not retrieved correctly`() {
+        every { rbInt.getRbIntegrationListByAdvertiserId(any()) } answers { listOf(rockerboxIntegration) }
+
+        // Test null spx
+        // Stub behavior for the mocked properties
+        every { spx.getSpxListByVariableIds(any()) } answers { null }
+        // Invoke the function and test
+        assertNull(service.getRbClientSpxMapByAdvertiserId(0))
+
+        // Test empty list of spx
+        // Stub behavior for the mocked properties
+        every { spx.getSpxListByVariableIds(any()) } answers { emptyList() }
+        // Invoke the function and test
+        assertNull(service.getRbClientSpxMapByAdvertiserId(0))
+    }
+
+    @Test
+    fun `getRbClientSpxMapByAdvertiserId return null or map when spx is retrieved`() {
+        every { rbInt.getRbIntegrationListByAdvertiserId(any()) } answers { listOf(rockerboxIntegration) }
+
+        // Test invalid spx
+        // Stub behavior for the mocked properties
+        assignDummyValuesToSPXs()
+        every { spx.getSpxListByVariableIds(any()) } answers { listOfSpx }
+        // Invoke the function and test
+        assertNull(service.getRbClientSpxMapByAdvertiserId(0))
+
+        // Test valid spx
+        // Stub behavior for the mocked properties
+        assignValidQueryToSPXs()
+        every { spx.getSpxListByVariableIds(any()) } answers { listOfSpx }
+        // Invoke the function and test
+        assertEquals(mapOfSpx, service.getRbClientSpxMapByAdvertiserId(0))
     }
 
     @Test

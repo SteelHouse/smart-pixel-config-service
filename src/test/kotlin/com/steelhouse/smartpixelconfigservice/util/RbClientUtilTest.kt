@@ -37,7 +37,8 @@ class RbClientUtilTest {
             { assertEquals("test_id", findRbAdvIdInString("\"rb_adv_id=test_id")) },
             { assertEquals("test_id", findRbAdvIdInString("return \"rb_adv_id=test_id\"; }")) },
             { assertEquals("test-id_test-id", findRbAdvIdInString("return \"rb_adv_id=test-id_test-id\"; }")) },
-            { assertEquals("test_id", findRbAdvIdInString("return \"rb_adv_id=test_id\"_test_id\"; }")) }
+            { assertEquals("test_id", findRbAdvIdInString("return \"rb_adv_id=test_id\"_test_id\"; }")) },
+            { assertEquals("test_id_test", findRbAdvIdInString("return \"rb_adv_id=test_id_test!@#\"; }")) }
         )
     }
 

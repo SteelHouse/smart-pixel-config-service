@@ -2,7 +2,6 @@ package com.steelhouse.smartpixelconfigservice.datasource.dao
 
 import com.steelhouse.postgresql.publicschema.AdvertiserSmartPxVariables
 import com.steelhouse.smartpixelconfigservice.datasource.repository.SpxRepository
-import com.steelhouse.smartpixelconfigservice.util.getSpxListFieldQueryInfoString
 import io.prometheus.client.Counter
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -68,36 +67,6 @@ class Spx(
             sqlCounter.labels("advertiser_smart_px_variables", "select", "error").inc()
         }
         return null
-    }
-
-    /**
-     * Returns the rows of advertiser_smart_px_variables updated.
-     *
-     * @return empty list for unknown db exception. No recovery is needed.
-     *         list of rows for successful db transaction.
-     *         null for db error. Further recovery is needed.
-     */
-    fun batchUpdateSpxListBySqlQueryAndReturnRows(list: List<AdvertiserSmartPxVariables>, sql: String): List<Map<String?, Any?>>? {
-        val listSize = list.size
-        val logString = getSpxListFieldQueryInfoString(list)
-        val rows: List<Map<String?, Any?>>
-        try {
-            rows = batchUpdateBySqlQueryAndReturnRows(list, sql)
-        } catch (e: Exception) {
-            log.error("unknown db exception to batch update. error message=[${e.message}]; $logString")
-            sqlCounter.labels("advertiser_smart_px_variables", "batch_update", "error").inc()
-            return emptyList()
-        }
-        val resultSize = rows.size
-        return if (rows.size == listSize) {
-            log.debug("$resultSize spx have been created")
-            sqlCounter.labels("advertiser_smart_px_variables", "batch_update", "ok").inc()
-            rows
-        } else {
-            log.error("problems with db batch update: recovery needed. returned result=[$resultSize]; $logString")
-            sqlCounter.labels("advertiser_smart_px_variables", "batch_update", "error").inc()
-            null
-        }
     }
 
     /**
